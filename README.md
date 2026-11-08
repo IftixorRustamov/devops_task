@@ -1,22 +1,31 @@
 # Crystal Logistics
 
-2-variant. Logistika va kuryer xizmati.
+PDP University Unit 4 DevOps. Crystal jamoasi, 2-variant. Logistika va kuryer xizmati.
 
-## Buyurtma qanday yetkaziladi?
+## Ishga tushirish
 
-1. Operator buyurtma ochadi va unga kuzatuv raqami beradi.
-2. Ombor xodimi jo‘natmani qabul qilganini qayd etadi.
-3. Operator buyurtmani kuryerga biriktiradi. Kuryer jo‘natmani olgach, holatini «Yo‘lda» deb belgilaydi.
-4. Kuryer jo‘natmani topshirganda «Yetkazildi» holatini qayd etadi. Mijoz kuzatuv raqami orqali joriy holat va uning tarixini ko‘radi.
+Python 3.9 yoki yangiroq versiya kerak. Repozitoriy papkasida demo buyurtmani yaratishdan topshirishgacha bajaradi.
 
-## Ma’lumotlar modeli loyihasi
+```sh
+python3 app.py demo
+```
 
-| Obyekt | Vazifasi |
-| --- | --- |
-| `orders` | Buyurtma, yetkazish manzili va yagona kuzatuv raqami |
-| `warehouses` | Jo‘natmani qabul qiladigan ombor |
-| `deliveries` | Buyurtmaga biriktirilgan kuryer va yetkazish vaqti |
-| `tracking_events` | Holat o‘zgargan vaqt va izoh |
+## Buyurtma bilan ishlash
+
+Buyurtma yaratilganda javobda kuzatuv kodi chiqadi. Keyingi buyruqlarda `KOD` o‘rniga shu kodni yozing.
+
+```sh
+python3 app.py create "Demo manzil"
+python3 app.py receive KOD
+python3 app.py assign KOD "Demo kuryer"
+python3 app.py dispatch KOD
+python3 app.py deliver KOD
+python3 app.py track KOD
+```
+
+Buyurtma holatlari `Yangi`, `Omborda`, `Yo‘lda`, `Yetkazildi`. `track` joriy holat va tarixni ko‘rsatadi. Oddiy buyruqlar ma’lumotni lokal `crystal.sqlite3` faylida saqlaydi.
+
+## Ma’lumotlar modeli
 
 ```mermaid
 erDiagram
@@ -25,11 +34,10 @@ erDiagram
     ORDERS ||--o{ TRACKING_EVENTS : kuzatiladi
 ```
 
-Buyurtma holatlari `Yangi`, `Omborda`, `Yo‘lda` va `Yetkazildi`. Joriy holat kuzatuv tarixidagi oxirgi yozuvdan olinadi.
+## Testlar
 
-## Qabul qilish mezonlari loyihasi
+```sh
+python3 -m unittest discover -s tests -v
+```
 
-- Har bir buyurtma uchun yagona kuzatuv raqami beriladi.
-- Holat o‘zgarganida tarixga yangi yozuv qo‘shiladi.
-- Buyurtma kuryerga biriktirilgach, yetkazish jarayonini boshlash mumkin.
-- Kuzatuv sahifasi mavjud raqam uchun holat va tarixni ko‘rsatadi. Noma’lum raqam uchun buyurtma topilmaganini bildiradi.
+[Jamoa kelishuvi](docs/team-charter.md) · [Kirish huquqlari](docs/access.md) · [Qarorlar](docs/decisions.md) · [Stand-up](docs/meetings.md)
