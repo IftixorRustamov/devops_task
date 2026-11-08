@@ -34,6 +34,15 @@ erDiagram
     ORDERS ||--o{ TRACKING_EVENTS : kuzatiladi
 ```
 
+## Docker demosini ishga tushirish
+
+```sh
+docker build --tag crystal-logistics .
+docker run --rm crystal-logistics
+```
+
+GitHub Actions har bir `main` PR’ida testlarni ishlatadi, Docker obrazini yig‘adi va konteynerda demoni ishga tushiradi.
+
 ## Testlar
 
 ```sh
