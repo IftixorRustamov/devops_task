@@ -1,0 +1,48 @@
+name: crystal
+
+services:
+  api:
+    build:
+      context: .
+      target: runtime
+    image: crystal-logistics:local
+    container_name: crystal-api
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      CRYSTAL_HOST: 0.0.0.0
+      CRYSTAL_PORT: 8000
+      CRYSTAL_DB_PATH: /data/crystal.sqlite3
+      CRYSTAL_LOG_LEVEL: ${CRYSTAL_LOG_LEVEL:-INFO}
+    ports:
+      - "${CRYSTAL_PUBLISH_PORT:-8000}:8000"
+    volumes:
+      - crystal-data:/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 10s
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys,urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).status == 200 else 1)"
+      interval: 15s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  crystal-data:

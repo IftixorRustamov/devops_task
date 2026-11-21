@@ -9,17 +9,58 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: Unit va API testlari
     runs-on: ubuntu-24.04
     timeout-minutes: 8
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.13"]
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Test order lifecycle
-        run: python3 -m unittest discover -s tests -v
-      - name: Build and run the container
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Testlar
+        run: python -m unittest discover -s tests -v
+
+  docker:
+    name: Docker build va smoke test
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Obraz ichida testlar
+        run: docker build --target test --tag crystal-logistics:test .
+      - name: Demo konteynerda
         run: |
-          docker build --tag crystal-logistics .
-          docker run --rm crystal-logistics
+          docker build --target runtime --tag crystal-logistics .
+          docker run --rm crystal-logistics demo
+      - name: Compose bilan ishga tushirish
+        run: docker compose up --build --detach --wait --wait-timeout 60
+      - name: Smoke test
+        run: ./scripts/smoke_test.sh http://localhost:8000
+      - name: Ma’lumot restartdan keyin saqlanishi
+        run: |
+          CODE=$(curl -sS -X POST -H 'Content-Type: application/json' \
+            --data '{"address":"Persist"}' http://localhost:8000/api/v1/orders \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["code"])')
+          docker compose restart api
+          docker compose up --detach --wait --wait-timeout 60
+          curl -fsS "http://localhost:8000/api/v1/orders/$CODE"
+      - name: Loglar
+        if: always()
+        run: docker compose logs api
+      - name: Tozalash
+        if: always()
+        run: docker compose down --volumes
