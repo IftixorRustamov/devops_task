@@ -2,93 +2,98 @@
 
 PDP University Unit 4 DevOps. Crystal jamoasi, 2-variant. Logistika va kuryer xizmati.
 
-Buyurtmani yaratish, omborga qabul qilish, kuryerga biriktirish, yo‘lga chiqarish va topshirishni kuzatadigan REST API. Docker konteynerda ishlaydi, ma’lumotlar Docker volume’dagi SQLite bazasida saqlanadi. Tashqi kutubxona yo‘q — faqat Python standart kutubxonasi.
+Buyurtmani yaratish, omborga qabul qilish, kuryerga biriktirish, yo‘lga chiqarish va topshirishni
+kuzatadigan tizim. **Mikroservis arxitekturasi**: uchta mustaqil servis, har birining **o‘z
+PostgreSQL bazasi**, ular o‘rtasida RabbitMQ hodisalari va bitta API gateway.
 
-## Tez ishga tushirish (Docker)
-
-Talab: Docker 24+ va Docker Compose v2.24+.
-
-```sh
-cp .env.example .env            # ixtiyoriy
-docker compose up --build --detach --wait
-curl http://localhost:8000/health
-./scripts/smoke_test.sh         # to‘liq hayot siklini tekshiradi
+```
+            ┌──────────── gateway (nginx) :8000 ────────────┐
+            │                    │                          │
+      order-service  ◄─HTTP─►  courier-service       tracking-service
+            │                    │                          │
+        order-db             courier-db               tracking-db
+            └───── hodisalar ──► RabbitMQ ──► hodisalar ────┘
 ```
 
-To‘xtatish: `docker compose down` (ma’lumotlar saqlanadi). Hammasini o‘chirish: `docker compose down --volumes`.
+| Servis | Vazifa | Baza |
+| --- | --- | --- |
+| `order-service` | Omborlar, buyurtmalar, holat mashinasi | `order-db` |
+| `courier-service` | Kuryer biriktirish | `courier-db` |
+| `tracking-service` | Ommaviy kuzatuv (hodisalardan quriladi) | `tracking-db` |
+| `gateway` | Yagona kirish, marshrutlash, rate limit, `X-Request-ID` | — |
 
-`make help` barcha qisqa buyruqlarni ko‘rsatadi (`make up`, `make smoke`, `make logs`, `make docker-test`…).
+## Tez ishga tushirish
+
+Talab: Docker 24+ va Docker Compose v2.24+, ~1.5 GB bo‘sh RAM.
+
+```sh
+cp .env.example .env                      # parollar (lokal uchun shundayicha ham bo‘ladi)
+docker compose up --build --detach --wait --wait-timeout 180
+curl http://localhost:8000/health/order
+./scripts/smoke_test.sh                   # to‘liq hayot sikli gateway orqali
+./scripts/resilience_test.sh              # izolyatsiya, broker o‘chishi, restart
+```
+
+RabbitMQ paneli: <http://localhost:15672>. To‘xtatish: `docker compose down` (ma’lumotlar
+saqlanadi). Hammasini o‘chirish: `docker compose down --volumes`. `make help` — barcha qisqa buyruqlar.
 
 ## API qisqacha
 
-| Metod | Yo‘l | Vazifa |
-| --- | --- | --- |
-| `GET` | `/health` | Servis va baza holati |
-| `GET` | `/api/v1/warehouses` | Omborlar ro‘yxati |
-| `POST` | `/api/v1/orders` | Buyurtma yaratish `{"address": "...", "warehouse_id": 1}` |
-| `GET` | `/api/v1/orders/{code}` | Holat va tarix |
-| `POST` | `/api/v1/orders/{code}/receive` | Omborga qabul qilish |
-| `POST` | `/api/v1/orders/{code}/assign` | Kuryer biriktirish `{"courier": "..."}` |
-| `POST` | `/api/v1/orders/{code}/dispatch` | Yo‘lga chiqarish |
-| `POST` | `/api/v1/orders/{code}/deliver` | Topshirish |
+| Metod | Yo‘l | Servis | Vazifa |
+| --- | --- | --- | --- |
+| `GET` | `/health`, `/health/{order,courier,tracking}` | gateway / servis | Holat |
+| `GET` | `/api/v1/warehouses` | order | Omborlar ro‘yxati |
+| `POST` | `/api/v1/orders` | order | Buyurtma yaratish `{"address": "...", "warehouse_id": 1}` |
+| `GET` | `/api/v1/orders/{code}` | order | Joriy holat va tarix |
+| `POST` | `/api/v1/orders/{code}/receive` | order | Omborga qabul qilish |
+| `POST` | `/api/v1/orders/{code}/assign` | courier | Kuryer biriktirish `{"courier": "..."}` |
+| `POST` | `/api/v1/orders/{code}/dispatch` | order | Yo‘lga chiqarish (kuryer majburiy) |
+| `POST` | `/api/v1/orders/{code}/deliver` | order | Topshirish |
+| `GET` | `/api/v1/tracking/{code}` | tracking | Ommaviy kuzatuv (manzil va kuryer nomisiz) |
 
-```sh
-curl -X POST localhost:8000/api/v1/orders -H 'Content-Type: application/json' \
-     -d '{"address": "Demo manzil"}'
-```
+Holatlar: `Yangi → Omborda → Yo‘lda → Yetkazildi`. Bosqichni o‘tkazib yuborish yoki ortga
+qaytish mumkin emas (`409`). To‘liq tavsif: [docs/api.md](docs/api.md).
 
-To‘liq tavsif, misollar va xato kodlari: [docs/api.md](docs/api.md).
+## Muhim kafolatlar
 
-Holatlar: `Yangi → Omborda → Yo‘lda → Yetkazildi`. Bosqichni o‘tkazib yuborish yoki ortga qaytish mumkin emas (`409 Conflict`).
+- **Database-per-service** — har bir baza alohida yopiq tarmoqda; boshqa servis unga ulana olmaydi.
+- **Transactional outbox** — RabbitMQ o‘chib tursa ham buyurtmalar yaratiladi, hodisalar keyin yetib boradi.
+- **Idempotent consumer’lar** va **dead letter queue** — takroriy yoki buzuq xabar tizimni buzmaydi.
+- **Circuit breaker va timeout** — bitta servis osilib qolsa, boshqasi ham osilmaydi (`503`).
+- **JSON loglar + `X-Request-ID`** — bitta so‘rovning barcha servislardagi izi.
 
-## Docker’siz ishlatish
-
-Python 3.9 yoki yangiroq versiya kerak.
-
-```sh
-python3 -m crystal serve --port 8000      # API
-python3 -m crystal demo                    # xotiradagi bazada to‘liq demo
-python3 app.py create "Demo manzil"        # CLI (eski buyruqlar ham ishlaydi)
-python3 app.py receive KOD
-python3 app.py assign KOD "Demo kuryer"
-python3 app.py dispatch KOD
-python3 app.py deliver KOD
-python3 app.py track KOD
-```
-
-CLI ma’lumotni lokal `crystal.sqlite3` faylida saqlaydi (`--db` yoki `CRYSTAL_DB_PATH` bilan o‘zgartiriladi).
+Bularning hammasi CI’da haqiqiy PostgreSQL va RabbitMQ bilan tekshiriladi.
 
 ## Loyiha tuzilmasi
 
 ```
-crystal/
-  config.py       muhit o‘zgaruvchilari (CRYSTAL_*)
-  domain.py       holatlar, o‘tishlar, xato turlari
-  db.py           SQLite ulanishi, sxema, tranzaksiya
-  repository.py   SQL so‘rovlar
-  service.py      biznes mantiq (OrderService)
-  api/server.py   HTTP REST API
-  cli.py          buyruqlar qatori
-tests/            unit, API va CLI testlari
-scripts/          smoke test
-Dockerfile        test + runtime bosqichli obraz
-compose.yaml      servis, volume, healthcheck
+services/
+  common/crystal_common/   umumiy: baza adapteri, HTTP, RabbitMQ, outbox/inbox, loglar
+  order/order_service/     domain, schema, service, api
+  courier/courier_service/
+  tracking/tracking_service/
+  requirements.txt         psycopg, pika (faqat konteynerda)
+gateway/nginx.conf         marshrutlash
+tests/                     unit + 3 servisli integratsion testlar
+scripts/                   smoke_test.sh, resilience_test.sh
+Dockerfile                 deps → test → runtime (SERVICE build argumenti)
+compose.yaml               8 konteyner, 6 tarmoq, 4 volume
 ```
-
-Qatlamlar va qarorlar: [docs/architecture.md](docs/architecture.md).
 
 ## Testlar
 
 ```sh
-python3 -m unittest discover -s tests -v       # lokal
-docker build --target test .                   # Docker ichida
+python3 -m unittest discover -s tests -v    # Python 3.9+, tashqi kutubxonasiz
+docker build --target test .                # Docker ichida
 ```
 
-GitHub Actions har bir `main` PR’ida testlarni Python 3.9 va 3.13 da ishlatadi, Docker obrazini yig‘adi, compose bilan ko‘taradi, smoke test va restartdan keyin ma’lumot saqlanishini tekshiradi.
+Lokal testlar SQLite va xotiradagi shinani ishlatadi — uchta servis haqiqiy HTTP orqali, har biri
+o‘z bazasi bilan ishga tushadi. GitHub Actions har bir `main` PR’ida bundan tashqari butun
+stack’ni ko‘tarib smoke va resilience testlarini ishlatadi.
 
 ## Hujjatlar
 
-- [Arxitektura](docs/architecture.md) — qatlamlar, ma’lumotlar modeli, holat mashinasi
+- [Arxitektura](docs/architecture.md) — servislar, bazalar, hodisalar, kafolatlar
 - [API](docs/api.md) — endpointlar, misollar, xatolar
-- [Docker va deploy](docs/deployment.md) — obraz, compose, sozlamalar, backup, nosozliklar
+- [Docker va deploy](docs/deployment.md) — konteynerlar, tarmoqlar, sozlamalar, backup, nosozliklar
 - [Qarorlar](docs/decisions.md) · [Jamoa kelishuvi](docs/team-charter.md) · [Kirish huquqlari](docs/access.md) · [Stand-up](docs/meetings.md)
