@@ -5,110 +5,155 @@
 | Vosita | Versiya |
 | --- | --- |
 | Docker Engine | 24+ |
-| Docker Compose | v2.24+ (`env_file.required` uchun) |
-| Python (Docker’siz ishlatish) | 3.9+ |
+| Docker Compose | v2.24+ |
+| Python (testlar va Docker’siz ishlatish) | 3.9+ |
+| Bo‘sh RAM | ~1.5 GB (3 PostgreSQL + RabbitMQ + 3 servis + nginx) |
+
+## Konteynerlar
+
+| Konteyner | Obraz | Tarmoqlar | Volume | Hostga ochiq port |
+| --- | --- | --- | --- | --- |
+| `gateway` | `nginxinc/nginx-unprivileged:1.27-alpine` | edge, backend | — | `${CRYSTAL_PUBLISH_PORT:-8000}` |
+| `order-service` | `crystal-order-service:local` | backend, events, order-data | — | — |
+| `courier-service` | `crystal-courier-service:local` | backend, events, courier-data | — | — |
+| `tracking-service` | `crystal-tracking-service:local` | backend, events, tracking-data | — | — |
+| `order-db` | `postgres:16-alpine` | order-data | `order-db-data` | — |
+| `courier-db` | `postgres:16-alpine` | courier-data | `courier-db-data` | — |
+| `tracking-db` | `postgres:16-alpine` | tracking-data | `tracking-db-data` | — |
+| `rabbitmq` | `rabbitmq:3.13-management-alpine` | events, edge | `rabbitmq-data` | `127.0.0.1:15672` (panel) |
+
+`edge`dan boshqa barcha tarmoqlar `internal: true` — internetga chiqmaydi va hostdan
+to‘g‘ridan-to‘g‘ri ochilmaydi. Har bir `*-data` tarmog‘ida faqat bitta servis va uning bazasi bor.
+
+Ishga tushish tartibi `depends_on: condition: service_healthy` bilan: bazalar va RabbitMQ →
+servislar → gateway. Servis o‘zi ham bazani 60 s gacha kutadi (`CRYSTAL_STARTUP_TIMEOUT_S`).
 
 ## Dockerfile
 
-Obraz ikki bosqichdan iborat:
+Bitta Dockerfile uchta servis obrazini yig‘adi; servisni `SERVICE` build argumenti tanlaydi.
 
 | Bosqich | Vazifa |
 | --- | --- |
-| `test` | Kod va testlarni nusxalaydi, `unittest`ni ishlatadi. Test yiqilsa build to‘xtaydi. |
-| `runtime` | Faqat `crystal/` va `app.py`. Testlar ishchi obrazga kirmaydi. |
+| `deps` | `services/requirements.txt` (psycopg, pika) o‘rnatiladi |
+| `test` | Barcha testlar obraz ichida. Test yiqilsa build to‘xtaydi |
+| `runtime` | Faqat `crystal_common` va **shu servis** kodi. Testlar va boshqa servislar kodi kirmaydi |
 
 ```sh
-docker build --target test -t crystal-logistics:test .   # testlar
-docker build --target runtime -t crystal-logistics .     # ishchi obraz
-docker run --rm crystal-logistics demo                    # demo
-docker run --rm -p 8000:8000 -v crystal-data:/data crystal-logistics   # API
+docker build --target test -t crystal-logistics:test .
+docker build --target runtime --build-arg SERVICE=order -t crystal-order-service .
 ```
 
-Ishchi obraz xususiyatlari:
+Ishchi obraz: root emas (uid 10001), kod `root`ga tegishli, `HEALTHCHECK` `/health`ni
+tekshiradi, `SIGTERM`da joriy so‘rovlar tugatilib, outbox relay va consumer’lar to‘xtatiladi.
 
-- **Root emas:** `crystal` foydalanuvchisi (uid/gid 10001). Kod `root`ga tegishli — jarayon o‘z kodini o‘zgartira olmaydi.
-- **Ma’lumot faqat `/data`da** (`VOLUME`). Konteyner o‘chirilsa ham baza volume’da qoladi.
-- **`HEALTHCHECK`** har 15 s `GET /health`ni tekshiradi; 3 marta ketma-ket xato bo‘lsa konteyner `unhealthy`.
-- **`ENTRYPOINT ["python", "-m", "crystal"]`**, `CMD ["serve"]` — istalgan CLI buyrug‘ini argument sifatida berish mumkin (`docker run … crystal-logistics demo`).
-- **To‘g‘ri to‘xtash:** server `SIGTERM`ni ushlaydi, joriy so‘rovlarni tugatib chiqadi (`docker stop` 10 s kutmaydi).
-- **Kichik kontekst:** `.dockerignore` allowlist — faqat `crystal/`, `tests/`, `app.py` yuboriladi; `.env`, `.git`, lokal baza obrazga tushmaydi.
-- **Tashqi bog‘liqlik yo‘q** — `pip install` bosqichi yo‘q, ta’minot zanjiri xavfi minimal.
-
-## compose.yaml
+## Ishga tushirish
 
 ```sh
-docker compose up --build --detach --wait   # healthy bo‘lguncha kutadi
+cp .env.example .env                 # parollarni o‘zgartiring
+docker compose up --build --detach --wait --wait-timeout 180
 docker compose ps
-docker compose logs -f api
-docker compose down                         # ma’lumot saqlanadi
-docker compose down --volumes               # ma’lumot ham o‘chadi
+./scripts/smoke_test.sh              # gateway orqali to‘liq ssenariy
+./scripts/resilience_test.sh         # izolyatsiya, broker o‘chishi, restart
 ```
 
-| Sozlama | Qiymat | Nega |
-| --- | --- | --- |
-| `ports` | `${CRYSTAL_PUBLISH_PORT:-8000}:8000` | Host porti `.env`dan o‘zgaradi |
-| `volumes` | `crystal-data:/data` | SQLite bazasi restart/qayta yaratishdan keyin saqlanadi |
-| `restart` | `unless-stopped` | Xatoda yoki host qayta yuklanganda avtomatik ko‘tariladi |
-| `read_only: true` + `tmpfs: /tmp` | | Konteyner fayl tizimiga yozib bo‘lmaydi (faqat `/data` va `/tmp`) |
-| `cap_drop: [ALL]`, `no-new-privileges` | | Linux imtiyozlari minimal |
-| `healthcheck` | `/health` | `--wait` va `depends_on: condition: service_healthy` uchun |
-| `logging` | json-file, 10 MB × 3 | Loglar diskni to‘ldirmaydi |
+To‘xtatish: `docker compose down` (ma’lumot saqlanadi). Hammasini o‘chirish:
+`docker compose down --volumes`.
+
+Bitta servisni qayta yig‘ish: `docker compose up --build --detach --wait order-service`.
 
 ## Muhit o‘zgaruvchilari
 
-| O‘zgaruvchi | Standart (lokal) | Konteynerda | Izoh |
-| --- | --- | --- | --- |
-| `CRYSTAL_HOST` | `127.0.0.1` | `0.0.0.0` | Tinglash manzili |
-| `CRYSTAL_PORT` | `8000` | `8000` | Konteyner ichidagi port |
-| `CRYSTAL_DB_PATH` | `crystal.sqlite3` | `/data/crystal.sqlite3` | SQLite fayli; papka avtomatik yaratiladi |
-| `CRYSTAL_LOG_LEVEL` | `INFO` | `INFO` | `DEBUG`/`INFO`/`WARNING`/`ERROR` |
-| `CRYSTAL_PUBLISH_PORT` | — | `8000` | Faqat compose: hostdagi port |
+Servislar (compose ularni o‘zi beradi):
 
-`.env.example`ni `.env`ga nusxalang. `.env` git’ga kiritilmaydi (`.gitignore`). Hozircha sir (parol, token) yo‘q; kelajakda ular ham faqat `.env` yoki CI secrets orqali beriladi.
+| O‘zgaruvchi | Standart | Izoh |
+| --- | --- | --- |
+| `CRYSTAL_DATABASE_URL` | `sqlite:///<servis>.sqlite3` | Konteynerda `postgresql://…@<servis>-db:5432/<servis>` |
+| `CRYSTAL_BROKER_URL` | bo‘sh → xotiradagi shina | Konteynerda `amqp://…@rabbitmq:5672/%2F` |
+| `CRYSTAL_ORDER_SERVICE_URL` | `http://localhost:8001` | courier-service uchun |
+| `CRYSTAL_COURIER_SERVICE_URL` | `http://localhost:8002` | order-service uchun |
+| `CRYSTAL_PORT` | 8001 / 8002 / 8003 (lokal) | Konteynerda hammasi `8000` |
+| `CRYSTAL_LOG_LEVEL` | `INFO` | |
+| `CRYSTAL_HTTP_TIMEOUT_MS` | `3000` | Servislararo so‘rov timeout’i |
+| `CRYSTAL_OUTBOX_INTERVAL_MS` | `500` | Outbox tekshirish oralig‘i |
+| `CRYSTAL_STARTUP_TIMEOUT_S` | `60` | Bazani kutish |
+
+`.env` (faqat compose o‘qiydi, servislarga to‘g‘ridan-to‘g‘ri berilmaydi):
+`CRYSTAL_PUBLISH_PORT`, `CRYSTAL_LOG_LEVEL`, `ORDER_DB_PASSWORD`, `COURIER_DB_PASSWORD`,
+`TRACKING_DB_PASSWORD`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`, `RABBITMQ_UI_PORT`.
+Har bir servis konteyneriga faqat **o‘z bazasining** paroli tushadi.
+
+> `.env.example`dagi parollar faqat lokal uchun. Serverda hammasini almashtiring.
+> Parollarda faqat harf, raqam va `_` ishlating — ular URL ichiga qo‘yiladi.
+
+## Docker’siz (lokal ishlab chiqish)
+
+```sh
+make test                 # 31 ta test: SQLite + xotiradagi shina, tashqi kutubxonasiz
+make run-order            # :8001
+make run-courier          # :8002
+make run-tracking         # :8003
+```
+
+Diqqat: Docker’siz har bir servis o‘z jarayonida xotiradagi shinadan foydalanadi, shuning uchun
+hodisalar boshqa servisga **yetib bormaydi**. To‘liq ssenariy uchun `docker compose` ishlating.
 
 ## Loglar
 
-Har bir so‘rov bitta qatorda: metod, yo‘l, status, davomiylik.
-
-```
-2026-11-21 12:27:18,144 INFO crystal.api GET /health 200 0.9ms
-2026-11-21 12:27:18,223 INFO crystal.api POST /api/v1/orders 201 3.1ms
+```sh
+docker compose logs -f order-service courier-service tracking-service gateway
+docker compose logs --no-log-prefix | grep <X-Request-ID>   # bitta so‘rov izi
 ```
 
-Loglar stdout/stderr’ga yoziladi — `docker compose logs` bilan o‘qiladi.
+```json
+{"ts": "2026-11-22T11:50:21+0000", "level": "INFO", "service": "order-service", "logger": "crystal.http", "msg": "POST /api/v1/orders 201 8.0ms", "request_id": "00b85a43…"}
+```
+
+## RabbitMQ panel
+
+`http://localhost:15672` (login/parol `.env`dan). Ko‘rish mumkin: `crystal.events` exchange,
+`courier-service.events`, `tracking-service.events` navbatlari va ularning `*.dlq` navbatlari.
+DLQ’da xabar paydo bo‘lsa — servis logida shu hodisa bo‘yicha `exc` maydonini qidiring.
 
 ## Backup va tiklash
 
-```sh
-# Backup (konteyner ishlayotgan paytda ham xavfsiz — SQLite backup API)
-docker compose exec api python -c "import sqlite3; s=sqlite3.connect('/data/crystal.sqlite3'); d=sqlite3.connect('/data/backup.sqlite3'); s.backup(d); d.close()"
-docker compose cp api:/data/backup.sqlite3 ./backup-$(date +%F).sqlite3
+Har bir baza alohida zaxiralanadi:
 
-# Tiklash
-docker compose stop api
-docker compose cp ./backup-2026-11-21.sqlite3 api:/data/crystal.sqlite3
-docker compose start api
+```sh
+for s in order courier tracking; do
+  docker compose exec -T "$s-db" pg_dump -U "$s" -d "$s" --format=custom > "backup-$s-$(date +%F).dump"
+done
+
+# Tiklash (masalan, order)
+docker compose stop order-service
+docker compose exec -T order-db pg_restore -U order -d order --clean --if-exists < backup-order-2026-11-22.dump
+docker compose start order-service
 ```
+
+tracking-db read model: uni yo‘qotish xavfli emas, lekin hozircha hodisalarni qayta o‘ynatish
+(replay) vositasi yo‘q — shuning uchun uni ham zaxiralang.
 
 ## CI/CD (GitHub Actions)
 
 `.github/workflows/ci.yml` har bir `main` PR va push’da:
 
-1. Testlar Python 3.9 va 3.13 matritsasida.
-2. `docker build --target test` — testlar obraz ichida.
-3. Ishchi obraz yig‘iladi, `demo` konteynerda ishlaydi.
-4. `docker compose up --wait` — konteyner `healthy` bo‘lishi kutiladi.
-5. `scripts/smoke_test.sh` — HTTP orqali to‘liq hayot sikli, `409` va `404` holatlari.
-6. Buyurtma yaratiladi, konteyner qayta ishga tushiriladi, buyurtma hali ham borligi tekshiriladi.
-7. Har doim loglar chiqariladi va `down --volumes` bilan tozalanadi.
+1. **test** — testlar Python 3.9 va 3.13 da (tashqi kutubxonasiz).
+2. **stack** —
+   `docker compose config`, obraz ichida testlar, butun stack `up --wait`,
+   `smoke_test.sh` (gateway orqali to‘liq hayot sikli, 409/404, `/internal` yopiqligi, tracking
+   hodisalar orqali yangilanishi) va `resilience_test.sh`:
+   - har bir servis boshqa servis bazasini tarmoqda ko‘rmasligi (6 juftlik);
+   - RabbitMQ to‘xtatilganda buyurtma yaratilishi, `degraded` holat va broker qaytgach hodisa yetib borishi;
+   - servislar va bazalar qayta ishga tushirilgandan keyin ma’lumot saqlanishi.
+3. Har doim loglar chiqariladi va `down --volumes` bilan tozalanadi.
 
 ## Nosozliklarni bartaraf etish
 
 | Belgisi | Sabab | Yechim |
 | --- | --- | --- |
-| `bind: address already in use` | 8000 port band | `.env`da `CRYSTAL_PUBLISH_PORT=8080` |
-| Konteyner `unhealthy` | Server ishga tushmadi | `docker compose logs api` |
-| `unable to open database file` | `/data` yozib bo‘lmaydi (bind mount egasi boshqa) | Named volume ishlating yoki host papkasini `chown 10001:10001` |
-| `database is locked` | Juda ko‘p parallel yozish | Bitta replika ishlating; ko‘p replika uchun PostgreSQL (architecture.md) |
-| `env_file … required` xatosi | Eski Compose | Compose v2.24+ ga yangilang |
-| `curl: Connection refused` | Konteyner hali ko‘tarilmagan | `docker compose up --wait` ishlating |
+| `bind: address already in use` | 8000 yoki 15672 band | `.env`da `CRYSTAL_PUBLISH_PORT` / `RABBITMQ_UI_PORT` |
+| Servis `unhealthy`, logda `Baza … tayyor bo‘lmadi` | Baza ko‘tarilmagan yoki parol noto‘g‘ri | `docker compose logs order-db`; parolni o‘zgartirgan bo‘lsangiz volume eski parolni saqlaydi → `down --volumes` |
+| `/health/<servis>` → `degraded`, `broker: fail` | RabbitMQ ishlamayapti | `docker compose ps rabbitmq`; hodisalar outbox’da kutadi, broker qaytgach yuboriladi |
+| `/api/v1/tracking/{code}` → `404`, lekin buyurtma bor | Hodisa hali yetib kelmagan | 1–2 s kuting; uzoq davom etsa broker va tracking-service loglarini tekshiring |
+| `dispatch` → `503` | courier-service ishlamayapti | `docker compose logs courier-service` |
+| Gateway `503 Servis vaqtincha mavjud emas` | Upstream konteyner o‘chgan | `docker compose ps`, `docker compose up -d --wait` |
+| `429` | Rate limit (50 r/s) | Yuklama testlari uchun `gateway/nginx.conf`da `rate`ni oshiring |

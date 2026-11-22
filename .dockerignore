@@ -1,7 +1,6 @@
 # Faqat kerakli fayllar build kontekstiga kiradi (allowlist)
 *
-!crystal/
+!services/
 !tests/
-!app.py
 **/__pycache__
 **/*.py[cod]

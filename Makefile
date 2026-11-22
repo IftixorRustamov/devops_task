@@ -1,40 +1,40 @@
-IMAGE ?= crystal-logistics
-PORT  ?= 8000
+PORT ?= 8000
+SERVICES = order courier tracking
 
-.PHONY: help test run demo docker-test docker-build up down logs ps smoke clean
+.PHONY: help test docker-test up down logs ps smoke resilience clean config $(addprefix run-,$(SERVICES))
 
 help: ## Buyruqlar ro‘yxati
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-13s %s\n", $$1, $$2}'
 
-test: ## Testlarni lokal ishlatish
+test: ## Unit va integratsion testlar (Docker’siz, SQLite + xotiradagi shina)
 	python3 -m unittest discover -s tests -v
 
-run: ## API’ni lokal ishga tushirish (Docker’siz)
-	python3 -m crystal serve --port $(PORT)
-
-demo: ## Demo buyurtma hayot sikli
-	python3 -m crystal demo
-
 docker-test: ## Testlarni Docker ichida ishlatish
-	docker build --target test --tag $(IMAGE):test .
+	docker build --target test --tag crystal-logistics:test .
 
-docker-build: ## Ishchi obrazni yig‘ish
-	docker build --target runtime --tag $(IMAGE) .
+config: ## compose.yaml’ni tekshirish
+	docker compose config --quiet
 
-up: ## docker compose bilan ishga tushirish
-	docker compose up --build --detach --wait
+up: ## Butun stack’ni ko‘tarish (3 servis, 3 PostgreSQL, RabbitMQ, gateway)
+	docker compose up --build --detach --wait --wait-timeout 180
 
-down: ## Konteynerlarni to‘xtatish (ma’lumotlar saqlanadi)
+down: ## To‘xtatish (ma’lumotlar saqlanadi)
 	docker compose down
 
-logs: ## Loglarni kuzatish
-	docker compose logs --follow api
+logs: ## Barcha servis loglari
+	docker compose logs --follow order-service courier-service tracking-service gateway
 
-ps: ## Konteyner holati
+ps: ## Konteynerlar holati
 	docker compose ps
 
-smoke: ## Ishlayotgan API’ni tekshirish
+smoke: ## Gateway orqali to‘liq hayot sikli
 	./scripts/smoke_test.sh http://localhost:$(PORT)
 
-clean: ## Konteyner va volume’ni o‘chirish (MA’LUMOTLAR O‘CHADI)
+resilience: ## Izolyatsiya, outbox va saqlanish testlari
+	./scripts/resilience_test.sh http://localhost:$(PORT)
+
+clean: ## Konteyner va volume’larni o‘chirish (MA’LUMOTLAR O‘CHADI)
 	docker compose down --volumes
+
+run-%: ## Bitta servisni lokal ishga tushirish (masalan: make run-order)
+	PYTHONPATH=services/common:services/$* python3 -m $*_service
