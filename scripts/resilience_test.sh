@@ -45,6 +45,14 @@ curl -fsS "$BASE_URL/api/v1/tracking/$CODE" >/dev/null \
 echo "== 3. Qayta ishga tushirishdan keyin ma’lumot saqlanadi"
 docker compose restart order-service courier-service tracking-service order-db courier-db tracking-db
 docker compose up --detach --wait --wait-timeout 180
+# Gateway qayta yaratilgan servislarning YANGI manzillariga yo‘naltirishi kerak.
+for route in "/api/v1/orders/$CODE order-service" "/api/v1/tracking/$CODE tracking-service" \
+             "/health/courier courier-service"; do
+  set -- $route
+  served_by=$(curl -sS -o /dev/null -D - "$BASE_URL$1" | tr -d '\r' | awk -F': ' 'tolower($1)=="x-service"{print $2}')
+  [[ "$served_by" == "$2" ]] || { echo "XATO: $1 -> '$served_by' javob berdi (kutilgan $2)" >&2; exit 1; }
+  echo "OK   $1 -> $served_by"
+done
 curl -fsS "$BASE_URL/api/v1/orders/$CODE" | json 'd["status"]' | grep -qx Yangi
 curl -fsS "$BASE_URL/api/v1/tracking/$CODE" | json 'd["status"]' | grep -qx Yangi
 echo "OK   buyurtma va kuzatuv ma’lumoti saqlangan"
