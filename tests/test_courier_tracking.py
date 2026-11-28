@@ -30,6 +30,13 @@ class CourierServiceTest(unittest.TestCase):
         self.assertEqual(self.service.get_assignment("CRY-1")["courier"], "ali")
         self.assertEqual([a["code"] for a in self.service.list_for_courier("ali")], ["CRY-1"])
 
+    def test_stats(self):
+        for code in ("CRY-1", "CRY-2"):
+            self.orders.orders[code] = "Omborda"
+            self.service.assign(code, "ali")
+        self.service.on_event(new_event("order.status_changed", {"code": "CRY-1", "status": "Yetkazildi", "seq": 4}, "t"))
+        self.assertEqual(self.service.stats(), [{"courier": "ali", "assigned": 2, "delivered": 1, "active": 1}])
+
     def test_courier_must_be_known_active_courier(self):
         self.orders.orders["CRY-1"] = "Omborda"
         with self.assertRaises(ValidationError):
