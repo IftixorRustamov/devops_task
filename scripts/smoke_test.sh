@@ -46,9 +46,10 @@ done
 curl -fsS "$BASE_URL/" | grep -q "Crystal Logistics" && echo "OK   GET / -> namoyish sahifasi"
 
 echo "== autentifikatsiya"
-call POST /api/v1/orders '{"address": "x"}' 401                     # token yo‘q
+ORDER_BODY='{"address": "Smoke manzil", "recipient_name": "Smoke Mijoz", "recipient_phone": "90 123 45 67"}'
+call POST /api/v1/orders "$ORDER_BODY" 401                           # token yo‘q
 EXTRA_HEADERS=(-H 'X-User: admin' -H 'X-User-Role: admin')
-call POST /api/v1/orders '{"address": "x"}' 401                     # soxta sarlavha yordam bermaydi
+call POST /api/v1/orders "$ORDER_BODY" 401                           # soxta sarlavha yordam bermaydi
 EXTRA_HEADERS=()
 TOKEN="buzilgan.token.qiymat"; WHO="buzilgan token"; call GET /api/v1/auth/me "" 401; TOKEN=""
 call POST /api/v1/auth/login '{"username":"admin","password":"noto‘g‘ri-parol"}' 401
@@ -65,8 +66,15 @@ login "$OPERATOR" smoke-parol-1
 call GET /api/v1/auth/me "" 200
 call GET /api/v1/auth/users "" 403                                   # faqat admin
 call GET /api/v1/warehouses "" 200
-call POST /api/v1/orders '{"address": "Smoke manzil"}' 201
+call POST /api/v1/orders '{"address": "x", "recipient_name": "Smoke", "recipient_phone": "123"}' 400
+call POST /api/v1/orders "$ORDER_BODY" 201
 CODE=$(printf '%s' "$BODY" | json 'd["code"]')
+call GET "/api/v1/orders?q=smoke%20mijoz&status=Yangi" "" 200
+printf '%s' "$BODY" | json '[i["code"] for i in d["items"]]' | grep -q "$CODE"
+call POST /api/v1/orders "$ORDER_BODY" 201
+CANCEL_CODE=$(printf '%s' "$BODY" | json 'd["code"]')
+call POST "/api/v1/orders/$CANCEL_CODE/cancel" '{"reason": "Mijoz rad etdi"}' 200
+call POST "/api/v1/orders/$CANCEL_CODE/receive" "" 409
 call POST "/api/v1/orders/$CODE/receive" "" 200
 call POST "/api/v1/orders/$CODE/dispatch" "" 409                     # kuryer hali yo‘q
 call POST "/api/v1/orders/$CODE/assign" '{"courier": "begona_kuryer"}' 400
@@ -76,10 +84,13 @@ call POST "/api/v1/orders/$CODE/dispatch" "" 200
 
 echo "== kuryerlar"
 login "$OTHER" smoke-parol-1
-call POST /api/v1/orders '{"address": "x"}' 403                     # kuryer buyurtma yarata olmaydi
+call POST /api/v1/orders "$ORDER_BODY" 403                           # kuryer buyurtma yarata olmaydi
+call GET "/api/v1/orders/$CODE" "" 403                               # boshqa kuryer manzilni ko‘ra olmaydi
 call POST "/api/v1/orders/$CODE/deliver" "" 403                      # unga biriktirilmagan
 login "$COURIER" smoke-parol-1
 call GET /api/v1/couriers/me/assignments "" 200
+call GET "/api/v1/orders/$CODE" "" 200                               # o‘z buyurtmasi: manzil va telefon
+printf '%s' "$BODY" | json 'd["recipient_phone"]' | grep -qx '+998901234567' 
 printf '%s' "$BODY" | json '[i["code"] for i in d["items"]]' | grep -q "$CODE"
 call POST "/api/v1/orders/$CODE/deliver" "" 200
 call POST "/api/v1/orders/$CODE/deliver" "" 409
@@ -112,7 +123,7 @@ call GET "/api/v1/tracking/$CODE" "" 200
 printf '%s' "$BODY" | json 'd["status"]' | grep -qx 'Yetkazildi' \
   || { echo "XATO: tracking-service hodisalarni olmadi: $BODY" >&2; exit 1; }
 printf '%s' "$BODY" | json 'd["courier_assigned"]' | grep -qx True
-if printf '%s' "$BODY" | grep -qE "Smoke|$COURIER"; then
+if printf '%s' "$BODY" | grep -qE "Smoke|$COURIER|901234567"; then
   echo "XATO: kuzatuv javobida shaxsiy ma’lumot bor: $BODY" >&2; exit 1
 fi
 echo "OK   tracking-service hodisalar orqali yangilandi"

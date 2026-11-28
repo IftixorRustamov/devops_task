@@ -55,8 +55,10 @@ so‘rovda `Authorization: Bearer <token>`.
 | `GET` | `/api/v1/auth/me` | auth | tizimga kirgan |
 | `GET` `POST` `PATCH` | `/api/v1/auth/users[/{username}]` | auth | admin |
 | `GET` | `/api/v1/warehouses` | order | admin, operator |
-| `POST` | `/api/v1/orders` `{"address": "...", "warehouse_id": 1}` | order | admin, operator |
-| `GET` | `/api/v1/orders/{code}` | order | tizimga kirgan |
+| `POST` | `/api/v1/orders` `{"recipient_name", "recipient_phone", "address"}` | order | admin, operator |
+| `GET` | `/api/v1/orders?q=&status=&limit=&offset=` | order | admin, operator |
+| `POST` | `/api/v1/orders/{code}/cancel` `{"reason"}` | order | admin, operator |
+| `GET` | `/api/v1/orders/{code}` | order | admin, operator, biriktirilgan kuryer |
 | `POST` | `/api/v1/orders/{code}/receive` · `/dispatch` | order | admin, operator |
 | `POST` | `/api/v1/orders/{code}/assign` `{"courier": "<login>"}` | courier | admin, operator |
 | `POST` | `/api/v1/orders/{code}/deliver` | order | admin, operator, **biriktirilgan** kuryer |
@@ -64,8 +66,7 @@ so‘rovda `Authorization: Bearer <token>`.
 | `GET` | `/api/v1/stats` · `/api/v1/couriers/stats` | order · courier | admin, operator (dashboard) |
 | `GET` | `/api/v1/tracking/{code}` | tracking | hamma (manzil va kuryer nomisiz) |
 
-Holatlar: `Yangi → Omborda → Yo‘lda → Yetkazildi`. Bosqichni o‘tkazib yuborish yoki ortga
-qaytish mumkin emas (`409`). To‘liq tavsif: [docs/api.md](docs/api.md).
+Holatlar: `Yangi → Omborda → Yo‘lda → Yetkazildi`, yoki `Bekor qilindi` (faqat yo‘lga chiqmasdan oldin). Bosqichni o‘tkazib yuborish yoki ortga qaytish mumkin emas (`409`). To‘liq tavsif: [docs/api.md](docs/api.md).
 
 ## Muhim kafolatlar
 
@@ -111,6 +112,7 @@ stack’ni ko‘tarib smoke va resilience testlarini ishlatadi.
 ## Hujjatlar
 
 - [Namoyish](docs/demo.md) — Codespaces’da ishga tushirish va o‘qituvchiga ko‘rsatish ssenariysi
+- [Mahsulot](docs/product.md) — foydalanuvchilar, muammolar, ustuvorlik, roadmap
 - [Interfeys dizayni](docs/design.md) — ranglar, tugmalar, maket va ularning sabablari
 - [Arxitektura](docs/architecture.md) — servislar, bazalar, hodisalar, autentifikatsiya, kafolatlar
 - [API](docs/api.md) — endpointlar, misollar, xatolar

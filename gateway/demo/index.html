@@ -32,6 +32,7 @@ button { font: inherit; color: inherit; }
 .mono { font-family: var(--mono); letter-spacing: 0; }
 .num { font-variant-numeric: tabular-nums; }
 [hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ============ Ilova karkasi ============ */
 .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
@@ -74,7 +75,8 @@ button { font: inherit; color: inherit; }
 .card-title { font-size: 16px; font-weight: 650; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .grid { display: grid; gap: 20px; }
 .cols-2 { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; }
-@media (max-width: 1020px) { .cols-2 { grid-template-columns: 1fr; } }
+@media (max-width: 1020px) { .cols-2 { grid-template-columns: minmax(0, 1fr); } }
+.grid > *, .cols-2 > * { min-width: 0; }
 
 .btn { height: 48px; padding: 0 20px; border: 0; border-radius: var(--r-btn); font-weight: 650; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: transform .12s ease, background-color .12s ease, box-shadow .12s ease; }
 .btn:active:not(:disabled) { transform: scale(.98); }
@@ -165,6 +167,42 @@ button { font: inherit; color: inherit; }
   .action-bar .btn { width: 100%; }
 }
 
+/* ============ Buyurtmalar: qidiruv, filtr, tafsilotlar ============ */
+.create { margin-bottom: 20px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.span-2 { grid-column: span 2; }
+@media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } .span-2 { grid-column: auto; } }
+.search { position: relative; margin-bottom: 12px; }
+.search > svg { position: absolute; left: 14px; top: 14px; width: 20px; height: 20px; color: var(--ink-2); pointer-events: none; }
+.search .input { padding-left: 44px; }
+.filters { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 6px; scrollbar-width: none; }
+.filter { border: 0; height: 34px; padding: 0 12px; border-radius: var(--r-pill); background: var(--sunken); color: var(--ink-2); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.filter .num { opacity: .7; margin-left: 2px; }
+.filter:hover { color: var(--ink); }
+.filter[aria-pressed="true"] { background: var(--brand-50); color: var(--brand-700); box-shadow: inset 0 0 0 1.5px var(--brand-100); }
+.filter:focus-visible, .link-danger:focus-visible { outline: none; box-shadow: var(--ring); }
+.head-actions { display: inline-flex; gap: 8px; align-items: center; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; margin: 0 0 22px; padding: 16px; background: var(--sunken); border-radius: 18px; }
+.facts dt { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+.facts dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.facts a { color: var(--brand-700); text-decoration: none; }
+.facts a:hover { text-decoration: underline; }
+@media (max-width: 560px) { .facts { grid-template-columns: 1fr; } }
+.banner { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 16px; font-size: 14px; }
+.banner svg { width: 18px; height: 18px; flex: none; }
+.banner[data-tone="bad"] { background: var(--danger-50); color: #7A1A12; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover:not(:disabled) { background: #93190F; }
+.action-bar[data-tone="bad"] { background: var(--danger-50); }
+.link-danger { margin-top: 14px; border: 0; background: none; padding: 4px 0; color: var(--danger); font-weight: 600; font-size: 14px; cursor: pointer; border-radius: 8px; }
+.link-danger:hover { text-decoration: underline; }
+.deliveries { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.delivery-address { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.delivery-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+.delivery-actions .btn { flex: 1; text-decoration: none; }
+.done-list { margin-top: 16px; }
+.done-list summary { cursor: pointer; font-weight: 650; }
+
 /* ============ Dashboard ============ */
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
 @media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -234,6 +272,9 @@ button { font: inherit; color: inherit; }
   <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h3l2 5-2.5 1.5a11 11 0 0 0 7 7L16 14l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/></symbol>
   <symbol id="i-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/></symbol>
 </svg>
 
@@ -271,27 +312,34 @@ button { font: inherit; color: inherit; }
     </section>
 
     <section id="view-orders" hidden>
-      <div class="grid cols-2">
-        <div class="grid">
-          <form class="card" id="order-form" novalidate>
-            <div class="inline">
-              <div class="field"><label for="order-address">Yangi buyurtma manzili</label><input class="input" id="order-address" maxlength="500" placeholder="Toshkent, Chilonzor 9, 12-uy"></div>
-              <button class="btn btn-primary" type="submit"><svg aria-hidden="true"><use href="#i-plus"/></svg>Yaratish</button>
-            </div>
-          </form>
-          <div class="card" id="order-card"></div>
+      <form class="card create" id="order-form" novalidate hidden>
+        <div class="card-title">Yangi buyurtma
+          <button class="icon-btn" type="button" id="order-form-close" aria-label="Yopish" title="Yopish" style="margin:0"><svg aria-hidden="true"><use href="#i-x"/></svg></button>
         </div>
+        <div class="form-grid">
+          <div class="field"><label for="order-name">Qabul qiluvchi</label><input class="input" id="order-name" maxlength="100" autocomplete="off" placeholder="Aziza Karimova"></div>
+          <div class="field"><label for="order-phone">Telefon</label><input class="input num" id="order-phone" inputmode="tel" autocomplete="off" placeholder="+998 90 123 45 67"></div>
+          <div class="field span-2"><label for="order-address">Manzil</label><input class="input" id="order-address" maxlength="500" autocomplete="off" placeholder="Toshkent, Chilonzor 9, 12-uy"></div>
+        </div>
+        <p class="form-error" id="order-error" role="alert" hidden></p>
+        <div style="margin-top:16px"><button class="btn btn-primary" type="submit">Yaratish</button></div>
+      </form>
+      <div class="grid cols-2">
+        <div class="card" id="order-card"></div>
         <div class="card">
-          <div class="card-title">So‘nggi buyurtmalar
-            <button class="icon-btn" type="button" id="recent-refresh" aria-label="Yangilash" title="Yangilash" style="margin:0"><svg aria-hidden="true"><use href="#i-refresh"/></svg></button>
-          </div>
-          <div class="list" id="recent"></div>
+          <div class="search"><svg aria-hidden="true"><use href="#i-search"/></svg>
+            <label for="order-search" class="sr">Qidirish</label>
+            <input class="input" id="order-search" type="search" placeholder="Kod, ism, telefon yoki manzil" autocomplete="off"></div>
+          <div class="filters" id="filters" role="group" aria-label="Holat bo‘yicha filtr"></div>
+          <div class="list" id="orders-list"></div>
+          <button class="btn btn-ghost btn-sm" type="button" id="orders-more" hidden style="margin-top:12px;width:100%">Yana ko‘rsatish</button>
         </div>
       </div>
     </section>
 
     <section id="view-courier" hidden>
-      <div class="card"><div class="list" id="courier-list"></div></div>
+      <div class="deliveries" id="courier-list"></div>
+      <details class="card done-list" id="courier-done" hidden><summary>Yakunlangan</summary><div class="list" id="courier-done-list"></div></details>
     </section>
 
     <section id="view-users" hidden>
@@ -352,7 +400,11 @@ const STEPS = [
   { status: "Yo‘lda",     tone: "transit", action: "deliver",  button: "Topshirildi" },
   { status: "Yetkazildi", tone: "done",    action: null },
 ];
-const TONE = Object.fromEntries(STEPS.map((s) => [s.status, s.tone]));
+const CANCELLED = "Bekor qilindi";
+const CANCELLABLE = ["Yangi", "Omborda"];
+const ALL_STATUSES = STEPS.map((s) => s.status).concat(CANCELLED);
+const TONE = Object.assign(Object.fromEntries(STEPS.map((s) => [s.status, s.tone])), { [CANCELLED]: "bad" });
+const fmtPhone = (p) => { const d = String(p).replace(/\D/g, ""); return d.length === 12 ? `+${d.slice(0, 3)} ${d.slice(3, 5)} ${d.slice(5, 8)} ${d.slice(8, 10)} ${d.slice(10)}` : p; };
 const PAGES = {
   login:     { title: "",                  icon: "i-login",   view: "view-login",     label: "Kirish" },
   orders:    { title: "Buyurtmalar",       icon: "i-box",     view: "view-orders",    label: "Buyurtmalar" },
@@ -489,66 +541,151 @@ function signOut(message) {
 }
 
 /* ================= buyurtmalar ================= */
+const ORDER_PAGE = 20;
+const listState = { status: "", q: "", offset: 0, items: [], total: 0, counts: {} };
+
+function showCreate(show) {
+  $("order-form").hidden = !show;
+  if (show) { $("order-error").hidden = true; $("order-name").focus(); }
+}
+$("order-form-close").addEventListener("click", () => showCreate(false));
 $("order-form").addEventListener("submit", (event) => {
   event.preventDefault();
-  const input = $("order-address"), address = input.value.trim();
-  input.setAttribute("aria-invalid", String(!address));
-  if (!address) return input.focus();
+  const fields = { recipient_name: $("order-name"), recipient_phone: $("order-phone"), address: $("order-address") };
+  const body = Object.fromEntries(Object.entries(fields).map(([k, el]) => [k, el.value.trim()]));
+  let firstEmpty = null;
+  Object.entries(fields).forEach(([k, el]) => { el.setAttribute("aria-invalid", String(!body[k])); if (!body[k] && !firstEmpty) firstEmpty = el; });
+  if (firstEmpty) return firstEmpty.focus();
   busy(event.submitter, async () => {
-    const { status, data } = await api("Buyurtma yaratildi", "POST", "/api/v1/orders", { address });
-    if (status !== 201) return toast(data.error || "Buyurtma yaratilmadi.", "error");
-    input.value = "";
+    const { status, data } = await api("Buyurtma yaratildi", "POST", "/api/v1/orders", body);
+    if (status !== 201) { $("order-error").hidden = false; $("order-error").textContent = data.error || "Buyurtma yaratilmadi."; return; }
+    Object.values(fields).forEach((el) => { el.value = ""; });
+    showCreate(false);
     toast("Buyurtma yaratildi");
     await openOrder(data.code);
-    loadRecent();
+    loadList();
   });
 });
-$("recent-refresh").addEventListener("click", (e) => busy(e.currentTarget, loadRecent));
 
-function loadOrders() { renderOrder(); loadRecent(); }
+function loadOrders() {
+  $("page-actions").innerHTML = `<button class="btn btn-primary" type="button" id="new-order">${icon("i-plus")}Yangi buyurtma</button>`;
+  $("new-order").addEventListener("click", () => showCreate(true));
+  renderOrder();
+  loadList();
+}
 
-async function loadRecent() {
-  const { status, data } = await api("So‘nggi buyurtmalar", "GET", "/api/v1/stats", undefined, { quiet: true });
-  const box = $("recent");
+let searchTimer;
+$("order-search").addEventListener("input", (e) => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { listState.q = e.target.value.trim(); loadList(); }, 250);
+});
+$("orders-more").addEventListener("click", (e) => busy(e.currentTarget, () => loadList(true)));
+
+async function loadList(more = false) {
+  listState.offset = more ? listState.items.length : 0;
+  const params = new URLSearchParams({ limit: ORDER_PAGE, offset: listState.offset });
+  if (listState.status) params.set("status", listState.status);
+  if (listState.q) params.set("q", listState.q);
+  const { status, data } = await api("Buyurtmalar ro‘yxati", "GET", `/api/v1/orders?${params}`, undefined, { quiet: true });
   if (status !== 200) return;
-  if (!data.recent.length) { box.innerHTML = empty("i-box", "Buyurtmalar yo‘q"); return; }
-  box.innerHTML = data.recent.map((o) => `<button class="row-btn" type="button" data-open="${esc(o.code)}" ${state.order?.code === o.code ? 'aria-current="true"' : ""}>
-    <span class="row-main"><span class="row-title mono">${esc(o.code)}</span><br><span class="row-sub">${esc(fmtTime(o.created_at))}</span></span>${chip(o.status)}</button>`).join("");
-  box.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => openOrder(b.dataset.open).then(loadRecent)));
+  listState.items = more ? listState.items.concat(data.items) : data.items;
+  listState.total = data.total; listState.counts = data.counts;
+  renderFilters(); renderList();
+}
+
+function renderFilters() {
+  const all = Object.values(listState.counts).reduce((a, b) => a + b, 0);
+  const opts = [["", "Hammasi", all], ...ALL_STATUSES.map((s) => [s, s, listState.counts[s] || 0])];
+  $("filters").innerHTML = opts.map(([value, label, n]) =>
+    `<button class="filter" type="button" data-status="${esc(value)}" aria-pressed="${listState.status === value}">${esc(label)} <span class="num">${n}</span></button>`).join("");
+  $("filters").querySelectorAll("[data-status]").forEach((b) => b.addEventListener("click", () => { listState.status = b.dataset.status; loadList(); }));
+}
+
+function renderList() {
+  const box = $("orders-list");
+  $("orders-more").hidden = listState.items.length >= listState.total;
+  if (!listState.items.length) {
+    box.innerHTML = listState.q || listState.status ? empty("i-search", "Hech narsa topilmadi") : empty("i-box", "Buyurtmalar yo‘q", "«Yangi buyurtma» tugmasini bosing.");
+    return;
+  }
+  box.innerHTML = listState.items.map((o) => `<button class="row-btn" type="button" data-open="${esc(o.code)}" ${state.order?.code === o.code ? 'aria-current="true"' : ""}>
+    <span class="row-main"><span class="row-title">${esc(o.recipient_name || "—")}</span><br><span class="row-sub mono">${esc(o.code)}</span></span>${chip(o.status)}</button>`).join("");
+  box.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", async () => { await openOrder(b.dataset.open); renderList(); }));
 }
 
 async function openOrder(code) {
   const { status, data } = await api("Buyurtma ochildi", "GET", `/api/v1/orders/${encodeURIComponent(code)}`);
-  if (status === 200) { state.order = data; renderOrder(); }
+  if (status === 200) { state.order = data; state.cancelling = false; renderOrder(); }
   else toast(data.error || "Buyurtma topilmadi.", "error");
+}
+
+const trackUrl = (code) => `${location.origin}/?track=${encodeURIComponent(code)}`;
+async function copyLink(code) {
+  try { await navigator.clipboard.writeText(trackUrl(code)); toast("Kuzatuv havolasi nusxalandi"); }
+  catch (_) { prompt("Havolani nusxalang:", trackUrl(code)); }
 }
 
 function renderOrder() {
   const card = $("order-card"), order = state.order;
-  if (!order) { card.innerHTML = empty("i-box", "Buyurtma tanlanmagan", "Yangisini yarating yoki ro‘yxatdan tanlang."); return; }
+  if (!order) { card.innerHTML = empty("i-box", "Buyurtma tanlanmagan", "Ro‘yxatdan tanlang yoki yangisini yarating."); return; }
+  const cancelled = order.status === CANCELLED;
   const index = STEPS.findIndex((s) => s.status === order.status), step = STEPS[index];
   const times = Object.fromEntries(order.history.map((h) => [h.status, h.created_at]));
-  const steps = STEPS.map((s, i) => {
-    const finished = i === index && !s.action;
-    const st = i < index ? "done" : finished ? "complete" : i === index ? "current" : "upcoming";
-    return `<li class="step" data-state="${st}" ${i === index ? 'aria-current="step"' : ""}>
-      <span class="step-dot">${st === "done" || st === "complete" ? icon("i-check") : i + 1}</span>
-      <span class="step-name">${esc(s.status)}</span><span class="step-time">${esc(fmtTime(times[s.status]))}</span></li>`;
-  }).join("");
-  let action;
-  if (!step.action) action = `<div class="done-note">${icon("i-check")} Mijozga topshirildi</div>`;
-  else {
-    const assigned = state.assigned[order.code];
-    const courier = step.action === "dispatch" && !assigned
-      ? `<div class="field"><label for="assign-courier">Kuryer</label><input class="input" id="assign-courier" placeholder="ali" autocomplete="off"></div>
-         <button class="btn btn-soft" type="button" id="assign-btn">Biriktirish</button>` : "";
-    action = `<div class="action-bar">${courier}<button class="btn btn-primary" type="button" id="step-btn">${esc(step.button)}</button></div>`;
+  const phone = order.recipient_phone;
+  const facts = `<dl class="facts">
+    <div><dt>Qabul qiluvchi</dt><dd>${esc(order.recipient_name || "—")}</dd></div>
+    <div><dt>Telefon</dt><dd>${phone ? `<a class="num" href="tel:${esc(phone)}">${esc(fmtPhone(phone))}</a>` : "—"}</dd></div>
+    <div class="span-2"><dt>Manzil</dt><dd>${esc(order.address)}</dd></div>
+    <div><dt>Kuryer</dt><dd>${esc(order.courier || "Biriktirilmagan")}</dd></div>
+    <div><dt>Yaratilgan</dt><dd>${esc(fmtTime(order.created_at))}</dd></div></dl>`;
+  let body;
+  if (cancelled) {
+    body = `<div class="banner" data-tone="bad">${icon("i-x")}<span><b>Bekor qilindi</b>${order.cancel_reason ? `: ${esc(order.cancel_reason)}` : ""}</span></div>`;
+  } else {
+    const steps = STEPS.map((s, i) => {
+      const finished = i === index && !s.action;
+      const st = i < index ? "done" : finished ? "complete" : i === index ? "current" : "upcoming";
+      return `<li class="step" data-state="${st}" ${i === index ? 'aria-current="step"' : ""}>
+        <span class="step-dot">${st === "done" || st === "complete" ? icon("i-check") : i + 1}</span>
+        <span class="step-name">${esc(s.status)}</span><span class="step-time">${esc(fmtTime(times[s.status]))}</span></li>`;
+    }).join("");
+    let action;
+    if (!step.action) action = `<div class="done-note">${icon("i-check")} Mijozga topshirildi</div>`;
+    else if (state.cancelling) {
+      action = `<div class="action-bar" data-tone="bad">
+        <div class="field"><label for="cancel-reason">Bekor qilish sababi</label><input class="input" id="cancel-reason" maxlength="200" placeholder="Mijoz rad etdi"></div>
+        <button class="btn btn-ghost" type="button" id="cancel-back">Orqaga</button>
+        <button class="btn btn-danger" type="button" id="cancel-confirm">Bekor qilish</button></div>`;
+    } else {
+      const courier = step.action === "dispatch" && !order.courier
+        ? `<div class="field"><label for="assign-courier">Kuryer</label><input class="input" id="assign-courier" placeholder="ali" autocomplete="off"></div>
+           <button class="btn btn-soft" type="button" id="assign-btn">Biriktirish</button>` : "";
+      action = `<div class="action-bar">${courier}<button class="btn btn-primary" type="button" id="step-btn">${esc(step.button)}</button></div>`;
+    }
+    body = `<ol class="steps" aria-label="Buyurtma bosqichlari">${steps}</ol>${action}`;
   }
-  card.innerHTML = `<div class="order-head"><span class="order-code">${esc(order.code)}</span>${chip(order.status)}</div>
-    <ol class="steps" aria-label="Buyurtma bosqichlari">${steps}</ol>${action}`;
+  const canCancel = !cancelled && CANCELLABLE.includes(order.status) && !state.cancelling;
+  card.innerHTML = `<div class="order-head"><span class="order-code">${esc(order.code)}</span>
+      <span class="head-actions">${chip(order.status)}
+        <button class="icon-btn" type="button" id="copy-link" aria-label="Kuzatuv havolasini nusxalash" title="Kuzatuv havolasini nusxalash" style="margin:0">${icon("i-link")}</button></span></div>
+    ${facts}${body}
+    ${canCancel ? `<button class="link-danger" type="button" id="cancel-open">Buyurtmani bekor qilish</button>` : ""}`;
+  $("copy-link").addEventListener("click", () => copyLink(order.code));
   $("step-btn")?.addEventListener("click", (e) => busy(e.currentTarget, () => advance(step)));
   $("assign-btn")?.addEventListener("click", (e) => busy(e.currentTarget, assignCourier));
   $("assign-courier")?.addEventListener("keydown", (e) => { if (e.key === "Enter") $("assign-btn").click(); });
+  $("cancel-open")?.addEventListener("click", () => { state.cancelling = true; renderOrder(); $("cancel-reason").focus(); });
+  $("cancel-back")?.addEventListener("click", () => { state.cancelling = false; renderOrder(); });
+  $("cancel-confirm")?.addEventListener("click", (e) => busy(e.currentTarget, cancelOrder));
+}
+
+async function cancelOrder() {
+  const code = state.order.code;
+  const { status, data } = await api("Buyurtma bekor qilindi", "POST", `/api/v1/orders/${encodeURIComponent(code)}/cancel`, { reason: $("cancel-reason").value.trim() });
+  if (status !== 200) return toast(data.error || "Bekor qilinmadi.", "error");
+  toast("Buyurtma bekor qilindi");
+  await openOrder(code);
+  loadList();
 }
 
 async function advance(step) {
@@ -557,7 +694,7 @@ async function advance(step) {
   if (status !== 200) return toast(data.error || "Amal bajarilmadi.", "error");
   toast(`Holat: ${data.status}`);
   await openOrder(code);
-  loadRecent();
+  loadList();
 }
 
 async function assignCourier() {
@@ -566,21 +703,33 @@ async function assignCourier() {
   const code = state.order.code;
   const { status, data } = await api(`Kuryer ${courier} biriktirildi`, "POST", `/api/v1/orders/${encodeURIComponent(code)}/assign`, { courier });
   if (status !== 200) return toast(data.error || "Kuryer biriktirilmadi.", "error");
-  state.assigned[code] = courier;
   toast(`${courier} biriktirildi`);
-  renderOrder();
+  await openOrder(code);
 }
 
 /* ================= kuryer ================= */
 async function loadCourier() {
-  const box = $("courier-list");
   const { status, data } = await api("Yetkazmalar", "GET", "/api/v1/couriers/me/assignments");
   if (status !== 200) return;
-  if (!data.items.length) { box.innerHTML = empty("i-truck", "Hozircha yetkazma yo‘q"); return; }
-  const rows = await Promise.all(data.items.map(async (item) => ({ ...item, status: (await api("Buyurtma holati", "GET", `/api/v1/orders/${encodeURIComponent(item.code)}`, undefined, { quiet: true })).data.status })));
-  box.innerHTML = rows.map((r) => `<div class="row"><span class="row-main"><span class="row-title mono">${esc(r.code)}</span><br><span class="row-sub">${esc(fmtTime(r.assigned_at))}</span></span>
-    <span style="display:flex;gap:10px;align-items:center">${chip(r.status)}${r.status === "Yo‘lda" ? `<button class="btn btn-primary btn-sm" type="button" data-deliver="${esc(r.code)}">Topshirildi</button>` : ""}</span></div>`).join("");
-  box.querySelectorAll("[data-deliver]").forEach((b) => b.addEventListener("click", (e) => busy(e.currentTarget, async () => {
+  const details = await Promise.all(data.items.map(async (item) => {
+    const r = await api("Buyurtma", "GET", `/api/v1/orders/${encodeURIComponent(item.code)}`, undefined, { quiet: true });
+    return r.status === 200 ? r.data : { code: item.code, status: "—" };
+  }));
+  const active = details.filter((o) => o.status === "Omborda" || o.status === "Yo‘lda");
+  const done = details.filter((o) => !active.includes(o));
+  $("courier-list").innerHTML = active.length ? active.map((o) => `<article class="card delivery">
+      <div class="order-head" style="margin-bottom:12px"><span class="row-title">${esc(o.recipient_name || "—")}</span>${chip(o.status)}</div>
+      <p class="delivery-address">${esc(o.address || "")}</p>
+      <p class="row-sub mono">${esc(o.code)}</p>
+      <div class="delivery-actions">
+        ${o.recipient_phone ? `<a class="btn btn-soft" href="tel:${esc(o.recipient_phone)}">${icon("i-phone")}Qo‘ng‘iroq</a>` : ""}
+        ${o.status === "Yo‘lda" ? `<button class="btn btn-primary" type="button" data-deliver="${esc(o.code)}">Topshirildi</button>`
+          : `<span class="row-sub">Ombordan olib ketishni kuting</span>`}
+      </div></article>`).join("")
+    : `<div class="card">${empty("i-truck", "Faol yetkazma yo‘q")}</div>`;
+  $("courier-done").hidden = !done.length;
+  $("courier-done-list").innerHTML = done.map((o) => `<div class="row"><span class="row-main"><span class="row-title">${esc(o.recipient_name || o.code)}</span><br><span class="row-sub mono">${esc(o.code)}</span></span>${chip(o.status)}</div>`).join("");
+  $("courier-list").querySelectorAll("[data-deliver]").forEach((b) => b.addEventListener("click", (e) => busy(e.currentTarget, async () => {
     const { status, data } = await api("Buyurtma topshirildi", "POST", `/api/v1/orders/${encodeURIComponent(b.dataset.deliver)}/deliver`);
     status === 200 ? toast("Topshirildi") : toast(data.error || "Topshirilmadi.", "error");
     loadCourier();
@@ -637,7 +786,7 @@ function renderLog() {
 }
 
 /* ================= grafiklar (SVG, kutubxonasiz) ================= */
-const COLORS = { new: "#5B6676", ware: "#9A6300", transit: "#1F55C7", done: "#137344", brand: "#2C62DE" };
+const COLORS = { new: "#5B6676", ware: "#9A6300", transit: "#1F55C7", done: "#137344", bad: "#B42318", brand: "#2C62DE" };
 function fmtDuration(seconds) {
   if (seconds == null) return "—";
   const s = Math.round(seconds);
@@ -700,14 +849,14 @@ async function loadDashboard(quiet = false) {
   const [o, c] = await Promise.all([api("Dashboard", "GET", "/api/v1/stats", undefined, { quiet }), api("Kuryerlar", "GET", "/api/v1/couriers/stats", undefined, { quiet })]);
   if (o.status !== 200) return;
   const d = o.data, by = d.by_status, share = d.total ? Math.round(by["Yetkazildi"] / d.total * 100) : 0;
-  $("page-actions").innerHTML = `<span class="meta num">${new Date().toLocaleTimeString("uz-UZ")}</span>`;
   const kpi = (iconId, tone, value, label) => `<div class="card kpi"><span class="kpi-icon" style="background:var(--${tone}-50);color:var(--${tone})">${icon(iconId)}</span>
     <div><div class="kpi-value">${esc(value)}</div><div class="kpi-label">${esc(label)}</div></div></div>`;
   $("kpis").innerHTML = kpi("i-box", "brand", fmtNum(d.total), "Jami buyurtmalar") + kpi("i-truck", "transit", fmtNum(by["Yo‘lda"]), "Yo‘lda")
     + kpi("i-check", "done", `${share}%`, "Yetkazilgan") + kpi("i-clock", "ware", fmtDuration(d.delivery_avg_seconds), "O‘rtacha yetkazish");
   if (!d.total) { ["chart-status", "chart-hourly", "chart-stages"].forEach((id) => { $(id).innerHTML = empty("i-chart", "Ma’lumot yo‘q"); }); }
   else {
-    barChart($("chart-status"), STEPS.map((s) => ({ label: s.status, value: by[s.status], color: COLORS[s.tone] })), fmtNum, ["Holat", "Soni"]);
+    barChart($("chart-status"), STEPS.map((s) => ({ label: s.status, value: by[s.status], color: COLORS[s.tone] }))
+      .concat({ label: "Bekor", value: by[CANCELLED] || 0, color: COLORS.bad }), fmtNum, ["Holat", "Soni"]);
     columnChart($("chart-hourly"), d.created_per_hour);
     barChart($("chart-stages"), [["receive", "Omborda", "ware"], ["dispatch", "Yo‘lda", "transit"], ["deliver", "Yetkazildi", "done"]]
       .map(([a, label, tone]) => ({ label, value: d.stage_avg_seconds[a], color: COLORS[tone] })), fmtDuration, ["Bosqich", "O‘rtacha"]);
@@ -716,7 +865,10 @@ async function loadDashboard(quiet = false) {
 }
 
 
-render();
+// Mijozga yuborilgan havola: /?track=CRY-… — kuzatuv sahifasi kod bilan darhol ochiladi.
+const deepLink = new URLSearchParams(location.search).get("track");
+if (deepLink) { state.page = "track"; render(); $("track-code").value = deepLink; $("track-form").requestSubmit(); }
+else render();
 </script>
 </body>
 </html>

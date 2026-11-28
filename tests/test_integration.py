@@ -122,7 +122,7 @@ class IntegrationTest(unittest.TestCase):
 
     def test_full_lifecycle_across_services(self):
         s = self.stack
-        status, created, _ = call(s.order_server, "POST", "/api/v1/orders", {"address": "Chilonzor 1"})
+        status, created, _ = call(s.order_server, "POST", "/api/v1/orders", {"address": "Chilonzor 1", "recipient_name": "Aziza", "recipient_phone": "901234567"})
         self.assertEqual(status, 201)
         code = created["code"]
 
@@ -141,7 +141,11 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(call(s.order_server, "POST", f"/api/v1/orders/{code}/deliver")[0], 409)
 
         status, order, _ = call(s.order_server, "GET", f"/api/v1/orders/{code}")
-        self.assertEqual(order["status"], "Yetkazildi")
+        self.assertEqual((order["status"], order["courier"], order["recipient_phone"]), ("Yetkazildi", "ali", "+998901234567"))
+        self.assertEqual(call(s.order_server, "GET", f"/api/v1/orders/{code}", as_user=VALI)[0], 403)
+        self.assertEqual(call(s.order_server, "GET", f"/api/v1/orders/{code}", as_user=ALI)[0], 200)
+        status, found, _ = call(s.order_server, "GET", "/api/v1/orders?q=chilonzor&status=Yetkazildi&limit=5")
+        self.assertEqual((status, found["items"][0]["code"]), (200, code))
 
         # Hodisalar hali yuborilmagan: tracking-service buyurtmani bilmaydi (eventual consistency).
         self.assertEqual(call(s.tracking_server, "GET", f"/api/v1/tracking/{code}")[0], 404)
@@ -152,6 +156,7 @@ class IntegrationTest(unittest.TestCase):
         self.assertTrue(tracked["courier_assigned"])
         self.assertNotIn("ali", json.dumps(tracked, ensure_ascii=False))
         self.assertNotIn("Chilonzor", json.dumps(tracked, ensure_ascii=False))
+        self.assertNotIn("901234567", json.dumps(tracked, ensure_ascii=False))
 
         _, assignment, _ = call(s.courier_server, "GET", f"/internal/assignments/{code}")
         self.assertIsNotNone(assignment["delivered_at"])
@@ -165,9 +170,19 @@ class IntegrationTest(unittest.TestCase):
         self.assertIn("items", payload)
         self.assertEqual(call(s.courier_server, "GET", "/api/v1/couriers/stats", as_user=ALI)[0], 403)
 
+    def test_cancel_reaches_tracking(self):
+        s = self.stack
+        _, created, _ = call(s.order_server, "POST", "/api/v1/orders", {"address": "Olmazor", "recipient_name": "Aziza", "recipient_phone": "901234567"})
+        code = created["code"]
+        self.assertEqual(call(s.order_server, "POST", f"/api/v1/orders/{code}/cancel", {"reason": "Mijoz"}, as_user=ALI)[0], 403)
+        self.assertEqual(call(s.order_server, "POST", f"/api/v1/orders/{code}/cancel", {"reason": "Mijoz"})[0], 200)
+        s.flush()
+        self.assertEqual(call(s.tracking_server, "GET", f"/api/v1/tracking/{code}", as_user=None)[1]["status"], "Bekor qilindi")
+        self.assertEqual(call(s.order_server, "GET", "/api/v1/orders?status=Noma%E2%80%99lum")[0], 400)
+
     def test_assign_conflicts_and_not_found(self):
         s = self.stack
-        _, created, _ = call(s.order_server, "POST", "/api/v1/orders", {"address": "Yunusobod"})
+        _, created, _ = call(s.order_server, "POST", "/api/v1/orders", {"address": "Yunusobod", "recipient_name": "Aziza", "recipient_phone": "901234567"})
         code = created["code"]
         self.assertEqual(call(s.courier_server, "POST", f"/api/v1/orders/{code}/assign", {"courier": "ali"})[0], 409)
         self.assertEqual(call(s.courier_server, "POST", "/api/v1/orders/CRY-NONE/assign", {"courier": "ali"})[0], 404)
@@ -195,7 +210,7 @@ class IntegrationTest(unittest.TestCase):
 
     def test_dispatch_returns_503_when_courier_service_down(self):
         s = self.stack
-        _, created, _ = call(s.order_server, "POST", "/api/v1/orders", {"address": "Sergeli"})
+        _, created, _ = call(s.order_server, "POST", "/api/v1/orders", {"address": "Sergeli", "recipient_name": "Aziza", "recipient_phone": "901234567"})
         code = created["code"]
         call(s.order_server, "POST", f"/api/v1/orders/{code}/receive")
         original = s.order_server.app  # courier klientini ishlamaydigan manzilga almashtiramiz
@@ -230,8 +245,8 @@ class AuthIntegrationTest(unittest.TestCase):
 
     def test_no_identity_means_401_and_wrong_role_403(self):
         s = self.stack
-        self.assertEqual(call(s.order_server, "POST", "/api/v1/orders", {"address": "x"}, as_user=None)[0], 401)
-        self.assertEqual(call(s.order_server, "POST", "/api/v1/orders", {"address": "x"}, as_user=ALI)[0], 403)
+        self.assertEqual(call(s.order_server, "POST", "/api/v1/orders", {"address": "x", "recipient_name": "Aziza", "recipient_phone": "901234567"}, as_user=None)[0], 401)
+        self.assertEqual(call(s.order_server, "POST", "/api/v1/orders", {"address": "x", "recipient_name": "Aziza", "recipient_phone": "901234567"}, as_user=ALI)[0], 403)
         self.assertEqual(call(s.courier_server, "POST", "/api/v1/orders/CRY-1/assign", {"courier": "ali"},
                               as_user=ALI)[0], 403)
         self.assertEqual(call(s.auth_server, "GET", "/api/v1/auth/users", as_user=OPERATOR)[0], 403)

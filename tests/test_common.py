@@ -55,6 +55,17 @@ class DatabaseTest(unittest.TestCase):
             self.assertEqual(session.one("SELECT COUNT(*) FROM items")[0], 0)
         self.assertTrue(self.db.ping())
 
+    def test_migrations_run_once_in_order(self):
+        migrations = [
+            (2, {"sqlite": ["ALTER TABLE items ADD COLUMN price INTEGER"]}),
+            (3, {"sqlite": ["CREATE INDEX IF NOT EXISTS items_price ON items (price)"]}),
+        ]
+        self.db.migrate(migrations)
+        self.db.migrate(migrations)  # ikkinchi marta — hech narsa qilmaydi (aks holda ALTER xato beradi)
+        with self.db.session() as session:
+            self.assertEqual([r[0] for r in session.all("SELECT version FROM schema_migrations ORDER BY version")], [2, 3])
+            session.execute("SELECT price FROM items")
+
     def test_mask_url_hides_password(self):
         self.assertEqual(mask_url("postgresql://order:secret@order-db:5432/order"),
                          "postgresql://order:***@order-db:5432/order")

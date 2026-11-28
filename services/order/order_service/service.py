@@ -1,6 +1,7 @@
 """Buyurtma hayot sikli. Holat o‘zgarishi va hodisa bitta tranzaksiyada yoziladi (outbox)."""
 
 from collections import Counter
+import re
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
@@ -11,9 +12,23 @@ from crystal_common.errors import (
 from crystal_common.security import COURIER
 from crystal_common.events import new_event, record_event, utc_now
 
-from .domain import CODE_PREFIX, NEW, ORDER_CREATED, ORDER_STATUS_CHANGED, STATUSES, TRANSITIONS
+from .domain import (
+    CANCELLABLE, CANCELLED, CODE_PREFIX, DELIVERED, NEW, ORDER_CREATED, ORDER_STATUS_CHANGED, STATUSES,
+    TRANSITIONS,
+)
 
 SOURCE = "order-service"
+PAGE_LIMIT = 50
+
+
+def normalize_phone(value):
+    """O‘zbekiston raqami: «90 123 45 67», «+998 90 123-45-67» -> «+998901234567»."""
+    digits = re.sub(r"\D", "", value if isinstance(value, str) else "")
+    if len(digits) == 9:
+        digits = "998" + digits
+    if len(digits) != 12 or not digits.startswith("998"):
+        raise ValidationError("Telefon raqami noto‘g‘ri. Namuna: +998 90 123 45 67.")
+    return "+" + digits
 
 
 def parse_time(value):
@@ -54,8 +69,11 @@ class OrderService:
             rows = session.all("SELECT id, name FROM warehouses ORDER BY id")
         return [{"id": row[0], "name": row[1]} for row in rows]
 
-    def create_order(self, address, warehouse_id=1):
+    def create_order(self, address, recipient_name, recipient_phone, warehouse_id=1):
+        """Qabul qiluvchi va telefon majburiy: ularsiz kuryer buyurtmani yetkaza olmaydi."""
         address = require_text(address, "Manzil bo‘sh bo‘lmasligi kerak.", max_length=500)
+        recipient_name = require_text(recipient_name, "Qabul qiluvchi ismini kiriting.", max_length=100)
+        recipient_phone = normalize_phone(recipient_phone)
         if isinstance(warehouse_id, bool) or not isinstance(warehouse_id, int):
             raise ValidationError("warehouse_id butun son bo‘lishi kerak.")
         code = CODE_PREFIX + uuid4().hex[:20].upper()
@@ -64,9 +82,9 @@ class OrderService:
             if session.one("SELECT 1 FROM warehouses WHERE id = ?", (warehouse_id,)) is None:
                 raise ValidationError("Ombor topilmadi.")
             session.execute(
-                "INSERT INTO orders (code, address, warehouse_id, status, version, created_at, updated_at) "
-                "VALUES (?, ?, ?, ?, 1, ?, ?)",
-                (code, address, warehouse_id, NEW, now, now),
+                "INSERT INTO orders (code, address, recipient_name, recipient_phone, warehouse_id, status, "
+                "version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)",
+                (code, address, recipient_name, recipient_phone, warehouse_id, NEW, now, now),
             )
             session.execute(
                 "INSERT INTO order_events (order_code, seq, status, created_at) VALUES (?, 1, ?, ?)",
@@ -129,7 +147,7 @@ class OrderService:
             for (prev_status, prev_at), (status, at) in zip(history, history[1:]):
                 if prev_at and at and status in status_to_action:
                     stage_seconds[status_to_action[status]].append((at - prev_at).total_seconds())
-            if history[-1][0] == STATUSES[-1] and history[0][1] and history[-1][1]:
+            if history[-1][0] == DELIVERED and history[0][1] and history[-1][1]:
                 full_seconds.append((history[-1][1] - history[0][1]).total_seconds())
         average = lambda values: round(sum(values) / len(values), 1) if values else None
         return {
@@ -143,6 +161,100 @@ class OrderService:
                 for c, s, ca, ua in orders[:recent]
             ],
         }
+
+    def details(self, code, actor):
+        """Xodim uchun to‘liq ma’lumot. Kuryer faqat o‘ziga biriktirilgan buyurtmani ko‘radi
+        (manzil va telefon shaxsiy ma’lumot)."""
+        code = normalize_code(code)
+        with self.db.session() as session:
+            row = session.one(
+                "SELECT address, recipient_name, recipient_phone, status, cancel_reason, created_at, updated_at "
+                "FROM orders WHERE code = ?", (code,)
+            )
+            history = session.all(
+                "SELECT status, created_at FROM order_events WHERE order_code = ? ORDER BY seq", (code,)
+            )
+        if row is None:
+            raise NotFoundError("Buyurtma topilmadi.")
+        try:
+            courier = self.courier.assigned_courier(code)
+        except UpstreamError:
+            courier = None  # courier-service ishlamasa ham buyurtma ochiladi
+        if actor is not None and actor.role == COURIER and courier != actor.username:
+            raise ForbiddenError("Bu buyurtma sizga biriktirilmagan.")
+        address, name, phone, status, reason, created, updated = row
+        return {
+            "code": code, "status": status, "address": address,
+            "recipient_name": name, "recipient_phone": phone, "courier": courier,
+            "cancel_reason": reason, "created_at": created, "updated_at": updated,
+            "history": [{"status": s, "created_at": c} for s, c in history],
+        }
+
+    def list_orders(self, status=None, query=None, limit=20, offset=0):
+        """Qidiruv (kod, qabul qiluvchi, telefon, manzil) va holat bo‘yicha filtr, sahifalab."""
+        clauses, params = [], []
+        if status:
+            if status not in STATUSES:
+                raise ValidationError("Noma’lum holat.")
+            clauses.append("status = ?")
+            params.append(status)
+        if query:
+            needle = "%" + query.strip().lower()[:100] + "%"
+            clauses.append(
+                "(LOWER(code) LIKE ? OR LOWER(recipient_name) LIKE ? OR recipient_phone LIKE ? OR LOWER(address) LIKE ?)"
+            )
+            params += [needle, needle, needle.replace(" ", ""), needle]
+        try:
+            limit = max(1, min(int(limit), PAGE_LIMIT))
+            offset = max(0, int(offset))
+        except (TypeError, ValueError):
+            raise ValidationError("limit va offset butun son bo‘lishi kerak.")
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        with self.db.session() as session:
+            total = session.one("SELECT COUNT(*) FROM orders" + where, params)[0]
+            rows = session.all(
+                "SELECT code, status, recipient_name, address, created_at, updated_at FROM orders" + where
+                + " ORDER BY created_at DESC, code LIMIT ? OFFSET ?",
+                params + [limit, offset],
+            )
+            counts = dict(session.all("SELECT status, COUNT(*) FROM orders GROUP BY status"))
+        return {
+            "total": total,
+            "items": [
+                {"code": c, "status": s, "recipient_name": n, "address": a, "created_at": ca, "updated_at": ua}
+                for c, s, n, a, ca, ua in rows
+            ],
+            "counts": {s: counts.get(s, 0) for s in STATUSES},
+        }
+
+    def cancel(self, code, reason=None):
+        code = normalize_code(code)
+        if reason is not None and not isinstance(reason, str):
+            raise ValidationError("Sabab matn bo‘lishi kerak.")
+        reason = (reason or "").strip()[:200] or None
+        now = self.clock()
+        with self.db.session(write=True) as session:
+            row = session.one("SELECT status, version FROM orders WHERE code = ?" + self.db.for_update, (code,))
+            if row is None:
+                raise NotFoundError("Buyurtma topilmadi.")
+            status, version = row
+            if status not in CANCELLABLE:
+                raise ConflictError("Yo‘lga chiqqan yoki yakunlangan buyurtmani bekor qilib bo‘lmaydi.")
+            seq = version + 1
+            session.execute(
+                "UPDATE orders SET status = ?, version = ?, cancel_reason = ?, updated_at = ? WHERE code = ?",
+                (CANCELLED, seq, reason, now, code),
+            )
+            session.execute(
+                "INSERT INTO order_events (order_code, seq, status, created_at) VALUES (?, ?, ?, ?)",
+                (code, seq, CANCELLED, now),
+            )
+            record_event(session, new_event(
+                ORDER_STATUS_CHANGED,
+                {"code": code, "status": CANCELLED, "previous": status, "seq": seq, "reason": reason},
+                SOURCE,
+            ))
+        return {"code": code, "status": CANCELLED}
 
     def internal_view(self, code):
         """Boshqa servislar uchun (gateway orqali tashqariga ochilmaydi)."""

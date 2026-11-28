@@ -12,6 +12,7 @@ import re
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from uuid import uuid4
 
@@ -31,11 +32,17 @@ class ApiError(Exception):
 
 
 class Request:
-    def __init__(self, method, path, headers, body):
+    def __init__(self, method, path, headers, body, query=None):
         self.method = method
         self.path = path
         self.headers = headers
         self.body = body
+        self.query = query or {}
+
+    def arg(self, name, default=None):
+        """Query parametri (`?status=Yangi`), birinchi qiymat."""
+        values = self.query.get(name)
+        return values[0] if values else default
 
     def json(self):
         raw = self.body or b"{}"
@@ -123,9 +130,10 @@ class Handler(BaseHTTPRequestHandler):
     def _dispatch(self, method):
         started = time.perf_counter()
         set_request_id(self.headers.get("X-Request-ID") or uuid4().hex)
-        path = self.path.split("?", 1)[0]
+        path, _, raw_query = self.path.partition("?")
         try:
-            request = Request(method, path, self.headers, self._read_body())
+            query = urllib.parse.parse_qs(raw_query, max_num_fields=20)
+            request = Request(method, path, self.headers, self._read_body(), query)
             status, payload, headers = self.server.app.handle(request)
         except ApiError as error:
             status, payload, headers = error.status, {"error": str(error)}, {}

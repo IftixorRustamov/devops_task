@@ -28,12 +28,13 @@ so‘rovning status kodini ko‘rsatadi (tafsilot uchun qatorni oching). Dizayn 
 | --- | --- | --- |
 | 1 | Noto‘g‘ri parol bilan kiring | `401`, «Login yoki parol noto‘g‘ri» |
 | 2 | **admin** / `admin_dev_password` → **Foydalanuvchilar** → **Namoyish hisoblarini qo‘shish** | `op1`, `ali`, `vali` yaratiladi (parol `demo-parol-1`) |
-| 3 | Chiqish → **op1** tugmasi → **Buyurtmalar** → manzil → **Yaratish** | Marshrut kartasi, `201` |
+| 3 | Chiqish → **op1** → **Yangi buyurtma** → ism, telefon (`90 123 45 67`), manzil → **Yaratish** | Telefon `+998…` ko‘rinishiga keltiriladi; karta: qabul qiluvchi, manzil, marshrut |
 | 4 | **Omborga qabul qilish** → **Yo‘lga chiqarish** | Toast: «Avval buyurtmaga kuryer biriktiring» (`409`) |
 | 5 | Kuryer `ali` → **Biriktirish** → **Yo‘lga chiqarish** | courier-service order va auth servislaridan so‘raydi |
 | 6 | Chiqish → **vali** → **Yetkazmalarim** | «Hozircha yetkazma yo‘q» — boshqa kuryer buyurtmasi ko‘rinmaydi |
 | 7 | Chiqish → **ali** → **Topshirildi** | Kuryer faqat o‘z buyurtmasini topshiradi |
-| 8 | **Kuzatish** → kod | Tokensiz; manzil va kuryer ismi yo‘q |
+| 8 | Buyurtma kartasida havola belgisi → yangi oynada oching | Mijoz havolasi: tokensiz, manzil va telefon yo‘q |
+| 8a | Yana buyurtma yarating → **Buyurtmani bekor qilish** → sabab | «Bekor qilindi» banneri; ro‘yxatda qidiruv va «Bekor qilindi» filtri |
 | 9 | op1 → **Dashboard** | Ko‘rsatkichlar va 4 grafik |
 | 10 | Arxitektura rasmi: [architecture.md](architecture.md); terminalda `docker compose stop rabbitmq` → buyurtma yarating | Broker yo‘q, lekin buyurtma yaratiladi (outbox). `docker compose start rabbitmq` — hodisalar yetib boradi |
 | 11 | **Jurnal** | Barcha so‘rovlar va status kodlari |
