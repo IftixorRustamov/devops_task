@@ -4,8 +4,11 @@ NEW = "Yangi"
 IN_WAREHOUSE = "Omborda"
 IN_TRANSIT = "Yo‘lda"
 DELIVERED = "Yetkazildi"
+CANCELLED = "Bekor qilindi"
 
-STATUSES = (NEW, IN_WAREHOUSE, IN_TRANSIT, DELIVERED)
+STATUSES = (NEW, IN_WAREHOUSE, IN_TRANSIT, DELIVERED, CANCELLED)
+# Yo‘lga chiqqan buyurtma bekor qilinmaydi: posilka allaqachon kuryerda.
+CANCELLABLE = (NEW, IN_WAREHOUSE)
 
 # amal -> (talab qilinadigan joriy holat, keyingi holat)
 TRANSITIONS = {

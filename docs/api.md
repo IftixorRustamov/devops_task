@@ -115,37 +115,59 @@ hodisalar outbox’da kutadi; `fail` (`503`) — servisning bazasi ishlamayapti.
 
 ## `POST /api/v1/orders` — order-service
 
+Admin va operator.
+
 | Maydon | Turi | Majburiy | Izoh |
 | --- | --- | --- | --- |
-| `address` | string | ha | Bo‘sh bo‘lmasligi kerak, 500 belgigacha |
+| `recipient_name` | string | ha | Qabul qiluvchi, 100 belgigacha |
+| `recipient_phone` | string | ha | O‘zbekiston raqami istalgan yozuvda: `90 123 45 67`, `+998 90 123-45-67` → `+998901234567` |
+| `address` | string | ha | 500 belgigacha |
 | `warehouse_id` | integer | yo‘q | Standart `1` |
 
 ```sh
-curl -X POST localhost:8000/api/v1/orders \
+curl -X POST localhost:8000/api/v1/orders -H "Authorization: Bearer $TOKEN" \
      -H 'Content-Type: application/json' \
-     -d '{"address": "Toshkent, Demo ko‘chasi 1"}'
+     -d '{"recipient_name": "Aziza Karimova", "recipient_phone": "90 123 45 67", "address": "Toshkent, Chilonzor 9"}'
 ```
-`201 Created`
+`201 Created` → `{"code": "CRY-4F1A9C0D2B7E4A61B3C8", "status": "Yangi"}`
+
+## `GET /api/v1/orders` — order-service
+
+Admin va operator. Qidiruv, filtr, sahifalash.
+
+| Parametr | Izoh |
+| --- | --- |
+| `q` | Kod, qabul qiluvchi, telefon yoki manzil bo‘yicha (katta-kichik harf farqsiz) |
+| `status` | `Yangi` · `Omborda` · `Yo‘lda` · `Yetkazildi` · `Bekor qilindi` |
+| `limit` / `offset` | Standart 20 / 0, `limit` ≤ 50 |
+
 ```json
-{"code": "CRY-4F1A9C0D2B7E4A61B3C8", "status": "Yangi"}
+{
+  "total": 1,
+  "items": [{"code": "CRY-…", "status": "Yangi", "recipient_name": "Aziza Karimova", "address": "…", "created_at": "…", "updated_at": "…"}],
+  "counts": {"Yangi": 1, "Omborda": 0, "Yo‘lda": 0, "Yetkazildi": 0, "Bekor qilindi": 0}
+}
 ```
 
 ## `GET /api/v1/orders/{code}` — order-service
 
-Joriy holat va to‘liq tarix, order-service bazasidan (har doim eng so‘nggi holat). Manzil va kuryer nomi qaytarilmaydi.
+Admin, operator va **shu buyurtmaga biriktirilgan** kuryer (boshqa kuryer — `403`).
 
-`200 OK`
 ```json
 {
-  "code": "CRY-4F1A9C0D2B7E4A61B3C8",
-  "status": "Yo‘lda",
-  "history": [
-    {"status": "Yangi", "created_at": "2026-11-21T10:00:00+00:00"},
-    {"status": "Omborda", "created_at": "2026-11-21T10:05:12+00:00"},
-    {"status": "Yo‘lda", "created_at": "2026-11-21T10:30:40+00:00"}
-  ]
+  "code": "CRY-4F1A9C0D2B7E4A61B3C8", "status": "Yo‘lda",
+  "recipient_name": "Aziza Karimova", "recipient_phone": "+998901234567",
+  "address": "Toshkent, Chilonzor 9", "courier": "ali", "cancel_reason": null,
+  "created_at": "…", "updated_at": "…",
+  "history": [{"status": "Yangi", "created_at": "…"}, {"status": "Omborda", "created_at": "…"}]
 }
 ```
+
+## `POST /api/v1/orders/{code}/cancel` — order-service
+
+Admin va operator. Faqat `Yangi` yoki `Omborda` holatida (yo‘lga chiqqan posilka kuryerda — `409`).
+Tana: `{"reason": "Mijoz rad etdi"}` (ixtiyoriy, 200 belgigacha). `order.status_changed` hodisasi
+`Bekor qilindi` bilan yuboriladi — tracking-service ham yangilanadi.
 
 ## `POST /api/v1/orders/{code}/receive` — order-service
 

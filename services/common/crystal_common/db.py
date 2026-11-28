@@ -107,6 +107,33 @@ class Database:
             for statement in statements:
                 session.execute(statement)
 
+    def migrate(self, migrations):
+        """Versiyalangan migratsiyalar: `[(versiya, {"postgres": [...], "sqlite": [...]})]`.
+
+        Qo‘llangan versiyalar `schema_migrations` jadvalida saqlanadi, har biri bir marta
+        bajariladi. Yangi baza asosiy sxemadan to‘liq yaratiladi, shuning uchun migratsiyalar
+        idempotent yoziladi (`IF NOT EXISTS`). SQLite faqat testlarda — u har doim yangi.
+        """
+        from .events import utc_now  # aylanma importdan qochish
+
+        with self.session(write=True) as session:
+            if self.dialect == POSTGRES:
+                session.execute("SELECT pg_advisory_xact_lock(7290002)")
+            session.execute(
+                "CREATE TABLE IF NOT EXISTS schema_migrations "
+                "(version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+            )
+            applied = {row[0] for row in session.all("SELECT version FROM schema_migrations")}
+            for version, steps in migrations:
+                if version in applied:
+                    continue
+                for statement in steps.get(self.dialect, []):
+                    session.execute(statement)
+                session.execute(
+                    "INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)", (version, utc_now())
+                )
+                log.info("Migratsiya qo‘llandi: v%s", version)
+
     def ping(self):
         with self.session() as session:
             return session.one("SELECT 1")[0] == 1

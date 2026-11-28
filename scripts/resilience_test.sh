@@ -37,7 +37,7 @@ done
 
 echo "== 2. RabbitMQ o‘chganda outbox"
 docker compose stop rabbitmq
-CODE=$(api -X POST -H 'Content-Type: application/json' --data '{"address":"Outbox"}' \
+CODE=$(api -X POST -H 'Content-Type: application/json' --data '{"address":"Outbox","recipient_name":"Outbox","recipient_phone":"901234567"}' \
   "$BASE_URL/api/v1/orders" | json 'd["code"]')
 echo "OK   broker yo‘q, lekin buyurtma yaratildi: $CODE"
 curl -fsS "$BASE_URL/health/order" | json 'd["status"]' | grep -qx degraded

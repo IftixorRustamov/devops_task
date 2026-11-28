@@ -7,7 +7,7 @@ from crystal_common.logs import setup_logging
 from crystal_common.runtime import serve
 
 from .api import build_app
-from .schema import SCHEMA
+from .schema import MIGRATIONS, SCHEMA
 from .service import CourierClient, OrderService
 
 
@@ -17,6 +17,7 @@ def main():
     db = Database(settings.database_url)
     db.wait_until_ready(settings.startup_timeout)
     db.init_schema(SCHEMA)
+    db.migrate(MIGRATIONS)
     bus = create_bus(settings.broker_url, "order-service")
     relay = OutboxRelay(db, bus, settings.outbox_interval)
     courier = CourierClient(ServiceClient(

@@ -23,7 +23,16 @@ def build_app(service, db, bus, relay):
     def create_order(request):
         require_role(request, *STAFF)
         body = request.json()
-        return HTTPStatus.CREATED, service.create_order(body.get("address"), body.get("warehouse_id", 1))
+        return HTTPStatus.CREATED, service.create_order(
+            body.get("address"), body.get("recipient_name"), body.get("recipient_phone"), body.get("warehouse_id", 1)
+        )
+
+    @app.route("GET", r"/api/v1/orders")
+    def list_orders(request):
+        require_role(request, *STAFF)
+        return HTTPStatus.OK, service.list_orders(
+            request.arg("status"), request.arg("q"), request.arg("limit", 20), request.arg("offset", 0)
+        )
 
     @app.route("GET", r"/api/v1/stats")
     def stats(request):
@@ -31,9 +40,14 @@ def build_app(service, db, bus, relay):
         return HTTPStatus.OK, service.stats()
 
     @app.route("GET", rf"/api/v1/orders/{CODE}")
-    def track_order(request, code):
-        require_role(request, ADMIN, OPERATOR, COURIER)
-        return HTTPStatus.OK, service.track(code)
+    def order_details(request, code):
+        user = require_role(request, ADMIN, OPERATOR, COURIER)
+        return HTTPStatus.OK, service.details(code, user)
+
+    @app.route("POST", rf"/api/v1/orders/{CODE}/cancel")
+    def cancel_order(request, code):
+        require_role(request, *STAFF)
+        return HTTPStatus.OK, service.cancel(code, request.json().get("reason"))
 
     @app.route("POST", rf"/api/v1/orders/{CODE}/(?P<action>receive|dispatch|deliver)")
     def move_order(request, code, action):
