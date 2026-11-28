@@ -1,16 +1,19 @@
 # Bitta Dockerfile — uchta servis obrazi. Qaysi servis ekanini SERVICE argumenti belgilaydi:
 #   docker build --build-arg SERVICE=order --target runtime -t crystal-order .
 ARG PYTHON_VERSION=3.13
+# Debian bookworm qat’iy belgilangan: trixie’dagi OpenSSL 3.5 kattaroq TLS handshake yuboradi va
+# GitHub Codespaces (docker-in-docker) tarmog‘ida pip PyPI’ga ulana olmaydi (read timeout).
+ARG DEBIAN_RELEASE=bookworm
 
 # ---------- 1-bosqich: bog‘liqliklar ----------
-FROM python:${PYTHON_VERSION}-slim AS deps
+FROM python:${PYTHON_VERSION}-slim-${DEBIAN_RELEASE} AS deps
 ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 COPY services/requirements.txt /tmp/requirements.txt
-RUN pip install --prefix=/install -r /tmp/requirements.txt
+RUN pip install --retries 10 --timeout 60 --prefix=/install -r /tmp/requirements.txt
 
 # ---------- 2-bosqich: testlar ----------
 # `docker build --target test .` — testlar o‘tmasa build to‘xtaydi.
-FROM python:${PYTHON_VERSION}-slim AS test
+FROM python:${PYTHON_VERSION}-slim-${DEBIAN_RELEASE} AS test
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 COPY --from=deps /install /usr/local
 WORKDIR /app
@@ -19,7 +22,7 @@ COPY tests/ tests/
 RUN python -m unittest discover -s tests -v
 
 # ---------- 3-bosqich: ishchi obraz ----------
-FROM python:${PYTHON_VERSION}-slim AS runtime
+FROM python:${PYTHON_VERSION}-slim-${DEBIAN_RELEASE} AS runtime
 ARG SERVICE
 RUN test -n "$SERVICE" || (echo "SERVICE build argumenti kerak: order | courier | tracking" && false)
 
