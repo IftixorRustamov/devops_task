@@ -110,6 +110,7 @@ stack’ni ko‘tarib smoke va resilience testlarini ishlatadi.
 ## Hujjatlar
 
 - [Namoyish](docs/demo.md) — Codespaces’da ishga tushirish va o‘qituvchiga ko‘rsatish ssenariysi
+- [Interfeys dizayni](docs/design.md) — ranglar, tugmalar, maket va ularning sabablari
 - [Arxitektura](docs/architecture.md) — servislar, bazalar, hodisalar, autentifikatsiya, kafolatlar
 - [API](docs/api.md) — endpointlar, misollar, xatolar
 - [Docker va deploy](docs/deployment.md) — konteynerlar, tarmoqlar, sozlamalar, backup, nosozliklar
