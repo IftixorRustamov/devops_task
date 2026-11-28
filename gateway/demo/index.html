@@ -4,459 +4,434 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>Crystal Logistics — boshqaruv paneli</title>
+<title>Crystal Logistics</title>
 <style>
-/* Dizayn tokenlari — sabablari docs/design.md da. */
+/* ============ Tokenlar (sabablari: docs/design.md) ============ */
 :root {
-  --concrete: #E9EDF1;   /* fon: ombor beton poli */
-  --surface:  #FFFFFF;   /* ish maydoni */
-  --ink:      #1B2430;   /* asosiy matn va asosiy tugma */
-  --ink-2:    #4A5565;   /* ikkinchi darajali matn */
-  --line:     #D3DAE2;   /* chegaralar */
-  --label:    #FFC933;   /* yuk yorlig‘i: faqat buyurtma kodi uchun */
+  --canvas: #EEF2F7;  --surface: #FFFFFF;  --sunken: #F4F6FA;
+  --ink: #172036;     --ink-2: #5A6478;    --ink-3: #A3ABBB;
+  --brand: #2C62DE;   --brand-50: #EBF1FF; --brand-100: #DCE6FF; --brand-700: #2453C4;
+  --danger: #B42318;  --danger-50: #FDECEA;
 
-  --st-new:     #5B6676; --st-new-bg:     #EEF1F4;   /* Yangi */
-  --st-ware:    #9A6300; --st-ware-bg:    #FFF3D6;   /* Omborda */
-  --st-transit: #1F55C7; --st-transit-bg: #E5EDFF;   /* Yo‘lda */
-  --st-done:    #137344; --st-done-bg:    #DDF5E8;   /* Yetkazildi */
-  --danger:     #B42318; --danger-bg:     #FDECEA;
+  --new: #4B5568;     --new-50: #EEF1F5;
+  --ware: #94600A;    --ware-50: #FFF3DC;
+  --transit: #2453C4; --transit-50: #E8EEFF;
+  --done: #12784A;    --done-50: #E3F6EC;
 
-  --focus: #1F55C7;
-  --radius-s: 6px; --radius-m: 10px;
-  --space: 8px;
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
-  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --r-input: 14px; --r-btn: 16px; --r-card: 22px; --r-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(23,32,54,.04), 0 12px 32px -16px rgba(23,32,54,.18);
+  --shadow-pop: 0 18px 44px -14px rgba(23,32,54,.32);
+  --ring: 0 0 0 4px color-mix(in srgb, var(--brand) 22%, transparent);
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--concrete); color: var(--ink); font: 15px/1.5 var(--font); }
-h1, h2, h3 { margin: 0; line-height: 1.2; }
-p { margin: 0; }
-code, .code { font-family: var(--mono); }
+body { margin: 0; background: var(--canvas); color: var(--ink); font: 15px/1.5 var(--font); letter-spacing: -0.006em; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p { margin: 0; }
+button { font: inherit; color: inherit; }
+.mono { font-family: var(--mono); letter-spacing: 0; }
+.num { font-variant-numeric: tabular-nums; }
+[hidden] { display: none !important; }
 
-/* ---------- yuqori panel ---------- */
-.topbar { background: var(--ink); color: #fff; }
-.topbar-inner { max-width: 1240px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 16px; }
-.brand { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; }
-.brand-mark { width: 22px; height: 22px; border-radius: 4px; background: var(--label); box-shadow: inset 0 -6px 0 rgba(0,0,0,.18); }
-.session { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 14px; }
-.session-name { font-weight: 600; }
-@media (max-width: 480px) { .session-name { display: none; } .brand { font-size: 15px; } .topbar-inner { padding: 12px 16px; } }
-.brand { white-space: nowrap; }
-.role-chip { padding: 2px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; background: rgba(255,255,255,.14); }
+/* ============ Ilova karkasi ============ */
+.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+.sidebar { padding: 22px 16px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0; height: 100vh; }
+.logo { display: flex; align-items: center; gap: 10px; padding: 0 8px; font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+.logo-mark { width: 30px; height: 30px; border-radius: 10px; background: var(--brand); display: grid; place-items: center; color: #fff; box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--brand) 80%, transparent); }
+.nav { display: grid; gap: 4px; }
+.nav-item { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border: 0; background: none; border-radius: 14px; cursor: pointer; font-weight: 600; color: var(--ink-2); text-align: left; }
+.nav-item svg { width: 20px; height: 20px; flex: none; }
+.nav-item:hover { background: rgba(255,255,255,.6); color: var(--ink); }
+.nav-item[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-card); }
+.nav-item[aria-current="page"] svg { color: var(--brand); }
+.nav-item:focus-visible, .btn:focus-visible, .chip-btn:focus-visible, .row-btn:focus-visible, .icon-btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow-card); }
+.avatar { width: 36px; height: 36px; flex: none; border-radius: 12px; background: var(--brand-50); color: var(--brand-700); display: grid; place-items: center; font-weight: 700; text-transform: uppercase; }
+.me-name { font-weight: 650; font-size: 14px; line-height: 1.2; }
+.me-role { font-size: 13px; color: var(--ink-2); }
+.icon-btn { margin-left: auto; width: 36px; height: 36px; border: 0; border-radius: 12px; background: var(--sunken); color: var(--ink-2); display: grid; place-items: center; cursor: pointer; }
+.icon-btn:hover { color: var(--ink); background: var(--brand-50); }
+.icon-btn svg { width: 18px; height: 18px; }
 
-/* ---------- maket ---------- */
-.layout { max-width: 1240px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
-@media (max-width: 960px) { .layout { grid-template-columns: 1fr; padding: 16px; } }
-.workspace { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 28px; min-height: 420px; }
-@media (max-width: 600px) { .workspace { padding: 18px; } }
-.rail { display: grid; gap: 28px; }
-.rail-section h2 { font-size: 15px; margin-bottom: 4px; }
-.lead { color: var(--ink-2); margin-bottom: 16px; max-width: 62ch; }
-.view-title { font-size: 24px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 6px; }
-.block + .block { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--line); }
-.block-title { font-size: 17px; font-weight: 650; margin-bottom: 12px; }
+.main { padding: 28px 32px 48px; max-width: 1180px; width: 100%; }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; min-height: 44px; }
+.page-title { font-size: 26px; font-weight: 700; letter-spacing: -0.025em; }
+.meta { font-size: 13px; color: var(--ink-2); }
 
-/* ---------- forma ---------- */
-.field { display: grid; gap: 4px; margin-bottom: 14px; }
-.field label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
-.input, select.input {
-  height: 42px; padding: 0 12px; width: 100%;
-  border: 1px solid var(--line); border-radius: var(--radius-s);
-  font: inherit; color: var(--ink); background: #fff;
+@media (max-width: 880px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .sidebar { position: relative; height: auto; padding: 14px 16px 0; gap: 12px; min-width: 0; }
+  .nav { grid-auto-flow: column; grid-auto-columns: max-content; overflow-x: auto; padding: 2px 2px 8px; min-width: 0; scrollbar-width: none; }
+  .nav-item { height: 40px; }
+  .me { position: absolute; top: 10px; right: 12px; padding: 4px; box-shadow: none; background: none; }
+  .me .avatar, .me-text { display: none; }
+  .main { padding: 16px 16px 40px; }
+  .page-title { font-size: 22px; }
 }
-.input:hover { border-color: #AEB8C4; }
-.input:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 35%, transparent); outline-offset: 0; border-color: var(--focus); }
-.input[aria-invalid="true"] { border-color: var(--danger); }
-.inline-form { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
-.inline-form .field { margin: 0; flex: 1 1 200px; }
-.hint { font-size: 13px; color: var(--ink-2); }
 
-/* ---------- tugmalar ---------- */
-.btn {
-  height: 42px; padding: 0 16px; border-radius: var(--radius-s);
-  border: 1px solid transparent; font: inherit; font-weight: 600; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
-  transition: background-color .12s ease, border-color .12s ease, color .12s ease;
-}
-.btn:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 45%, transparent); outline-offset: 2px; }
-.btn:disabled { cursor: not-allowed; opacity: .45; }
-.btn-primary { background: var(--ink); color: #fff; }
-.btn-primary:hover:not(:disabled) { background: #2E3A49; }
-.btn-secondary { background: #fff; color: var(--ink); border-color: var(--line); }
-.btn-secondary:hover:not(:disabled) { border-color: var(--ink-2); }
-.btn-quiet { background: transparent; color: inherit; border-color: rgba(255,255,255,.35); height: 34px; padding: 0 12px; }
-.btn-quiet:hover { border-color: #fff; }
-.btn-step { color: #fff; }
-.btn-step[data-tone="new"]     { background: var(--st-ware); }
-.btn-step[data-tone="ware"]    { background: var(--st-transit); }
-.btn-step[data-tone="transit"] { background: var(--st-done); }
-.btn-step:hover:not(:disabled) { filter: brightness(.92); }
-.btn[aria-busy="true"]::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; }
+/* ============ Komponentlar ============ */
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow-card); padding: 22px; }
+.card-title { font-size: 16px; font-weight: 650; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.grid { display: grid; gap: 20px; }
+.cols-2 { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 1020px) { .cols-2 { grid-template-columns: 1fr; } }
+
+.btn { height: 48px; padding: 0 20px; border: 0; border-radius: var(--r-btn); font-weight: 650; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: transform .12s ease, background-color .12s ease, box-shadow .12s ease; }
+.btn:active:not(:disabled) { transform: scale(.98); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn svg { width: 18px; height: 18px; }
+.btn-primary { background: var(--brand); color: #fff; box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--brand) 75%, transparent); }
+.btn-primary:hover:not(:disabled) { background: var(--brand-700); }
+.btn-soft { background: var(--brand-50); color: var(--brand-700); }
+.btn-soft:hover:not(:disabled) { background: var(--brand-100); }
+.btn-ghost { background: var(--sunken); color: var(--ink); }
+.btn-ghost:hover:not(:disabled) { background: #E8ECF3; }
+.btn-sm { height: 38px; padding: 0 14px; border-radius: 12px; font-size: 14px; }
+.btn[aria-busy="true"] { pointer-events: none; }
+.btn[aria-busy="true"]::before { content: ""; width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.btn-small { height: 34px; padding: 0 12px; font-size: 14px; }
 
-/* ---------- holat belgisi ---------- */
-.status { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; }
-.status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.status[data-tone="new"]     { color: var(--st-new);     background: var(--st-new-bg); }
-.status[data-tone="ware"]    { color: var(--st-ware);    background: var(--st-ware-bg); }
-.status[data-tone="transit"] { color: var(--st-transit); background: var(--st-transit-bg); }
-.status[data-tone="done"]    { color: var(--st-done);    background: var(--st-done-bg); }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.input { height: 48px; width: 100%; padding: 0 16px; border: 0; border-radius: var(--r-input); background: var(--sunken); font: inherit; color: var(--ink); transition: box-shadow .12s ease, background-color .12s ease; }
+.input::placeholder { color: #7B8497; }
+.input:hover { background: #EEF1F6; }
+.input:focus { outline: none; background: #fff; box-shadow: inset 0 0 0 1.5px var(--brand), var(--ring); }
+.input[aria-invalid="true"] { box-shadow: inset 0 0 0 1.5px var(--danger); }
+.inline { display: flex; gap: 10px; align-items: end; }
+.inline .field { flex: 1; }
+@media (max-width: 560px) { .inline { flex-wrap: wrap; } .inline .btn { width: 100%; } }
 
-/* ---------- yuk yorlig‘i (buyurtma kodi) ---------- */
-.parcel-label { display: inline-flex; align-items: stretch; border: 1.5px solid var(--ink); border-radius: var(--radius-s); overflow: hidden; font-family: var(--mono); }
-.parcel-label span:first-child { background: var(--label); padding: 6px 10px; font-weight: 700; font-family: var(--font); font-size: 13px; display: flex; align-items: center; }
-.parcel-label span:last-child { padding: 6px 12px; font-size: 16px; font-weight: 600; letter-spacing: .02em; background: #fff; user-select: all; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: var(--r-pill); font-size: 13px; font-weight: 650; white-space: nowrap; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip[data-tone="new"] { color: var(--new); background: var(--new-50); }
+.chip[data-tone="ware"] { color: var(--ware); background: var(--ware-50); }
+.chip[data-tone="transit"] { color: var(--transit); background: var(--transit-50); }
+.chip[data-tone="done"] { color: var(--done); background: var(--done-50); }
+.chip[data-tone="bad"] { color: var(--danger); background: var(--danger-50); }
 
-/* ---------- marshrut (asosiy element) ---------- */
-.route-wrap { position: relative; margin: 28px 0 24px; }
-.route { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); position: relative; }
-.route::before { content: ""; position: absolute; left: 12.5%; right: 12.5%; top: 15px; height: 4px; background: var(--line); border-radius: 2px; }
-.route-progress { position: absolute; z-index: 1; left: 12.5%; top: 15px; height: 4px; border-radius: 2px; background: var(--ink); width: 0; transition: width .45s cubic-bezier(.2,.7,.2,1); }
-.stop { position: relative; display: grid; justify-items: center; text-align: center; gap: 6px; padding: 0 4px; }
-.stop-dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 3px solid var(--line); font-weight: 700; font-size: 13px; color: var(--ink-2); position: relative; z-index: 2; }
-.stop-name { font-weight: 650; font-size: 14px; }
-.stop-time { font-size: 12px; color: var(--ink-2); min-height: 18px; }
-.stop[data-state="done"] .stop-dot { background: var(--ink); border-color: var(--ink); color: #fff; }
-.stop[data-state="complete"] .stop-dot { background: var(--st-done); border-color: var(--st-done); color: #fff; box-shadow: 0 0 0 5px var(--st-done-bg); }
-.stop[data-state="current"] .stop-dot { border-color: currentColor; background: #fff; color: inherit; box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 18%, transparent); }
-.stop[data-tone="new"]     { color: var(--st-new); }
-.stop[data-tone="ware"]    { color: var(--st-ware); }
-.stop[data-tone="transit"] { color: var(--st-transit); }
-.stop[data-tone="done"]    { color: var(--st-done); }
-.stop .stop-name, .stop .stop-time { color: var(--ink); }
-.stop .stop-time { color: var(--ink-2); }
-.stop[data-state="upcoming"] .stop-name { color: var(--ink-2); font-weight: 500; }
-@media (max-width: 600px) {
-  .route-wrap { margin: 20px 0; }
-  .route { grid-template-columns: 1fr; gap: 14px; }
-  .route::before, .route-progress { display: none; }
-  .stop { grid-template-columns: 34px 1fr; justify-items: start; text-align: left; column-gap: 12px; row-gap: 0; }
-  .stop-dot { grid-row: span 2; }
+/* Ro‘yxat: bitta oq konteyner, ichida ingichka ajratgichlar (alohida kartalar emas) */
+.list { display: grid; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px 4px; border-top: 1px solid #EEF1F5; }
+.row:first-child { border-top: 0; }
+.row-btn { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px 10px; margin: 0 -6px; border-radius: 14px; cursor: pointer; }
+.row-btn:hover { background: var(--sunken); }
+.row-btn[aria-current="true"] { background: var(--brand-50); }
+.row-main { min-width: 0; }
+.row-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-sub { font-size: 13px; color: var(--ink-2); }
+
+.empty { display: grid; justify-items: center; text-align: center; gap: 10px; padding: 28px 12px; color: var(--ink-2); }
+.empty-icon { width: 48px; height: 48px; border-radius: 16px; background: var(--sunken); display: grid; place-items: center; color: var(--ink-3); }
+.empty-icon svg { width: 24px; height: 24px; }
+.empty-title { color: var(--ink); font-weight: 650; }
+
+/* ============ Kirish ============ */
+.login { min-height: calc(100vh - 140px); display: grid; place-items: center; }
+.login .card { width: min(400px, 100%); padding: 30px; display: grid; gap: 16px; }
+.login h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.demo { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.chip-btn { border: 0; height: 32px; padding: 0 12px; border-radius: var(--r-pill); background: var(--sunken); color: var(--ink-2); font-size: 13px; font-weight: 600; cursor: pointer; }
+.chip-btn:hover { background: var(--brand-50); color: var(--brand-700); }
+.form-error { color: var(--danger); font-size: 14px; font-weight: 500; }
+
+/* ============ Buyurtma: marshrut ============ */
+.order-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+.order-code { font-family: var(--mono); font-size: 17px; font-weight: 650; }
+.steps { list-style: none; margin: 0 0 24px; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
+.step { display: grid; justify-items: center; gap: 8px; text-align: center; position: relative; }
+.step::before { content: ""; position: absolute; top: 15px; right: 50%; width: 100%; height: 3px; background: #E6EAF1; z-index: 0; }
+.step:first-child::before { display: none; }
+.step[data-state="done"]::before, .step[data-state="current"]::before, .step[data-state="complete"]::before { background: var(--brand); }
+.step-dot { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #E6EAF1; color: var(--ink-2); font-size: 13px; font-weight: 700; position: relative; z-index: 1; transition: background-color .3s ease, box-shadow .3s ease; }
+.step-dot svg { width: 16px; height: 16px; }
+.step[data-state="done"] .step-dot { background: var(--brand); color: #fff; }
+.step[data-state="current"] .step-dot { background: #fff; color: var(--brand); box-shadow: inset 0 0 0 3px var(--brand), 0 0 0 6px var(--brand-50); }
+.step[data-state="complete"] .step-dot { background: var(--done); color: #fff; box-shadow: 0 0 0 6px var(--done-50); }
+.step-name { font-size: 14px; font-weight: 650; }
+.step[data-state="upcoming"] .step-name { color: var(--ink-2); font-weight: 500; }
+.step-time { font-size: 12px; color: var(--ink-2); min-height: 18px; }
+.action-bar { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; padding: 16px; border-radius: 18px; background: var(--sunken); }
+.action-bar .field { flex: 1 1 200px; }
+.action-bar .input { background: #fff; }
+.action-bar .btn { flex: 0 0 auto; }
+.done-note { display: flex; align-items: center; gap: 10px; color: var(--done); font-weight: 600; }
+.done-note svg { width: 20px; height: 20px; }
+@media (max-width: 560px) {
+  .steps { grid-template-columns: 1fr; gap: 14px; }
+  .step { grid-template-columns: 32px 1fr; justify-items: start; text-align: left; column-gap: 12px; row-gap: 0; }
+  .step::before { display: none; }
+  .step-dot { grid-row: span 2; }
+  .action-bar .btn { width: 100%; }
 }
 
-.next-step { display: grid; gap: 12px; padding: 18px; border-radius: var(--radius-m); background: #F6F8FA; border: 1px solid var(--line); }
-.next-step h3 { font-size: 15px; }
-.next-step .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
-.order-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-
-/* ---------- jadval va ro‘yxatlar ---------- */
-.table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.table th { text-align: left; font-size: 13px; color: var(--ink-2); font-weight: 600; padding: 8px 8px 8px 0; border-bottom: 1px solid var(--line); }
-.table td { padding: 10px 8px 10px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.table tr:last-child td { border-bottom: 0; }
-.link-btn { background: none; border: 0; padding: 0; font: inherit; color: var(--st-transit); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.link-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 2px; }
-.empty { padding: 20px; border: 1px dashed var(--line); border-radius: var(--radius-m); color: var(--ink-2); }
-
-/* ---------- xabarlar ---------- */
-.notice { padding: 10px 14px; border-radius: var(--radius-s); font-size: 14px; border-left: 4px solid; }
-.notice-error { background: var(--danger-bg); border-color: var(--danger); color: #7A1A12; }
-.notice-ok { background: var(--st-done-bg); border-color: var(--st-done); color: #0D4D2E; }
-.demo-accounts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-
-/* ---------- jurnal ---------- */
-.log { list-style: none; margin: 0; padding: 0; max-height: 460px; overflow: auto; border-top: 1px solid var(--line); }
-.log li { border-bottom: 1px solid var(--line); padding: 10px 0; }
-.log-line { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: baseline; font-size: 13px; }
-.log-code { font-family: var(--mono); font-weight: 700; }
-.log-code[data-ok="true"] { color: var(--st-done); }
-.log-code[data-ok="false"] { color: var(--danger); }
-.log-what { color: var(--ink); }
-.log-time { color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.log details { margin: 4px 0 0 52px; font-size: 12px; }
-.log summary { cursor: pointer; color: var(--ink-2); }
-.log pre { margin: 6px 0 0; padding: 8px; background: #F6F8FA; border-radius: var(--radius-s); white-space: pre-wrap; word-break: break-all; font: 12px/1.45 var(--mono); max-height: 220px; overflow: auto; }
-.log-path { font-family: var(--mono); color: var(--ink-2); font-size: 12px; }
-
-.track-result { margin-top: 14px; display: grid; gap: 10px; }
-.timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--line); display: grid; gap: 8px; font-size: 13px; }
-.timeline li { position: relative; }
-.timeline li::before { content: ""; position: absolute; left: -20px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--ink-2); }
-.timeline time { display: block; color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; }
-
-/* ---------- bo‘limlar (tablar) ---------- */
-.tabs { background: var(--surface); border-bottom: 1px solid var(--line); }
-.tabs-inner { max-width: 1240px; margin: 0 auto; padding: 0 24px; display: flex; gap: 4px; overflow-x: auto; }
-.tab { appearance: none; background: none; border: 0; border-bottom: 3px solid transparent; padding: 12px 14px 11px; font: inherit; font-weight: 600; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
-.tab:hover { color: var(--ink); }
-.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
-.tab:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 45%, transparent); outline-offset: -3px; }
-@media (max-width: 480px) { .tabs-inner { padding: 0 8px; } .tab { padding: 12px 9px 11px; } }
-.layout.wide { grid-template-columns: 1fr; }
-.layout.wide .rail { display: none; }
-
-/* ---------- dashboard ---------- */
-#view-dashboard > .block { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
-.dash-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-.dash-meta { font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 12px; }
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--radius-m); margin-bottom: 28px; }
-.tile { padding: 16px 18px; }
-.tile + .tile { border-left: 1px solid var(--line); }
-.tile-value { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
-.tile-label { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
-@media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile:nth-child(3) { border-left: 0; } .tile:nth-child(n+3) { border-top: 1px solid var(--line); } }
-.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
-@media (max-width: 860px) { .charts { grid-template-columns: 1fr; } }
-.chart h2 { font-size: 15px; font-weight: 650; }
-.chart .sub { font-size: 13px; color: var(--ink-2); margin: 2px 0 10px; }
+/* ============ Dashboard ============ */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+@media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { padding: 18px; display: grid; gap: 12px; }
+.kpi-icon { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; }
+.kpi-icon svg { width: 20px; height: 20px; }
+.kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.kpi-label { font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
 .chart svg text { font-family: var(--font); fill: var(--ink-2); font-size: 12px; }
-.chart svg .value { fill: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-.chart svg .label { fill: var(--ink); font-size: 13px; }
-.chart svg .grid { stroke: #E3E8EE; stroke-width: 1; }
-.chart svg .hit { fill: transparent; cursor: default; }
-.chart svg .hit:hover + .mark, .chart svg .mark.hover { opacity: .8; }
-.chart details { margin-top: 8px; font-size: 13px; }
-.chart summary { cursor: pointer; color: var(--ink-2); }
-.chart .table { margin-top: 6px; }
-.legend { display: flex; gap: 16px; font-size: 13px; color: var(--ink); margin-bottom: 8px; }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-.tooltip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: #fff; font-size: 13px; padding: 6px 10px; border-radius: var(--radius-s); box-shadow: 0 4px 14px rgba(27,36,48,.2); white-space: nowrap; }
-.tooltip b { font-variant-numeric: tabular-nums; }
+.chart svg .label { fill: var(--ink); font-size: 13px; font-weight: 500; }
+.chart svg .value { fill: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+.chart svg .grid { stroke: #EDF0F5; }
+.chart svg .track { fill: var(--sunken); }
+.chart svg .hit { fill: transparent; }
+.chart svg .hit:focus { outline: none; }
+.chart details { margin-top: 10px; font-size: 13px; }
+.chart summary { cursor: pointer; color: var(--ink-2); width: max-content; }
+.chart table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.chart td, .chart th { text-align: left; padding: 6px 0; border-bottom: 1px solid #EEF1F5; }
+.chart th { color: var(--ink-2); font-weight: 600; }
+.legend { display: flex; gap: 14px; font-size: 13px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-weight: 500; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; }
+.tooltip { position: fixed; z-index: 30; pointer-events: none; background: var(--ink); color: #fff; font-size: 13px; padding: 7px 11px; border-radius: 10px; box-shadow: var(--shadow-pop); white-space: nowrap; }
 
-/* ---------- arxitektura ---------- */
+/* ============ Arxitektura ============ */
 .arch svg { display: block; width: 100%; height: auto; }
-.arch .node rect { fill: #fff; stroke: var(--line); stroke-width: 1.5; }
-.arch .node.db rect { fill: #F6F8FA; }
+.arch .node rect { fill: #fff; filter: drop-shadow(0 6px 10px rgba(23,32,54,.10)); }
+.arch .node.db rect { fill: var(--sunken); filter: none; }
 .arch .node .name { font: 650 14px var(--font); fill: var(--ink); }
 .arch .node .role { font: 12px var(--font); fill: var(--ink-2); }
 .arch .node .badge text { font: 700 11px var(--font); fill: #fff; }
-.arch .node[data-health="ok"] .badge circle { fill: #137344; }
-.arch .node[data-health="degraded"] .badge circle { fill: #9A6300; }
-.arch .node[data-health="fail"] .badge circle { fill: #B42318; }
-.arch .node[data-health="unknown"] .badge circle { fill: #8D99A8; }
-.arch .node:focus-visible { outline: none; }
-.arch .node:focus-visible rect { stroke: var(--focus); stroke-width: 3; }
-.arch .node[data-health="ok"] rect { stroke: #137344; }
-.arch .node[data-health="degraded"] rect { stroke: #9A6300; stroke-dasharray: 5 3; }
-.arch .node[data-health="fail"] rect { stroke: #B42318; stroke-width: 2.5; }
-.arch .edge { stroke: #8D99A8; stroke-width: 1.5; fill: none; }
-.arch .edge.sync { stroke: var(--ink); }
-.arch .edge.event { stroke: #9A6300; stroke-dasharray: 6 4; }
-.arch .edge.data { stroke: #AEB8C4; }
-.arch .edge-label { font: 11px var(--font); fill: var(--ink-2); }
-.arch .zone { fill: none; stroke: #C9D2DC; stroke-dasharray: 3 4; }
-.arch .zone-label { font: 600 11px var(--font); fill: var(--ink-2); }
-.arch-legend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; margin: 14px 0 22px; color: var(--ink-2); }
+.arch .node[data-health="ok"] .badge circle { fill: var(--done); }
+.arch .node[data-health="degraded"] .badge circle { fill: #B7791F; }
+.arch .node[data-health="fail"] .badge circle { fill: var(--danger); }
+.arch .node[data-health="unknown"] .badge circle { fill: var(--ink-3); }
+.arch .node[data-health="fail"] rect { stroke: var(--danger); stroke-width: 2; }
+.arch .node[data-health="degraded"] rect { stroke: #B7791F; stroke-width: 2; stroke-dasharray: 5 3; }
+.arch .node:focus { outline: none; }
+.arch .node:focus-visible rect { stroke: var(--brand); stroke-width: 3; }
+.arch .edge { fill: none; stroke-width: 1.6; }
+.arch .edge.sync { stroke: #8792A6; }
+.arch .edge.event { stroke: #C08A2A; stroke-dasharray: 6 4; }
+.arch .edge.data { stroke: #C9D0DC; }
+.arch .zone { fill: rgba(238,242,247,.55); stroke: #D8DEE8; stroke-dasharray: 4 5; }
+.arch-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); margin-top: 14px; }
 .arch-legend span { display: inline-flex; align-items: center; gap: 8px; }
-.arch-legend svg { width: 34px; height: 8px; }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px 28px; margin-top: 26px; }
-.facts h3 { font-size: 14px; margin-bottom: 4px; }
-.facts p { font-size: 14px; color: var(--ink-2); }
-.health { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
-.health[data-health="ok"] { color: #137344; }
-.health[data-health="degraded"] { color: #9A6300; }
-.health[data-health="fail"] { color: #B42318; }
-.health[data-health="unknown"] { color: var(--ink-2); }
 
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-[hidden] { display: none !important; }
+/* ============ Jurnal, kuzatuv, toast ============ */
+.log-row { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; padding: 10px 4px; border-top: 1px solid #EEF1F5; }
+.log-row:first-child { border-top: 0; }
+.code-badge { font: 700 12px var(--mono); padding: 4px 0; border-radius: 8px; text-align: center; }
+.code-badge[data-ok="true"] { color: var(--done); background: var(--done-50); }
+.code-badge[data-ok="false"] { color: var(--danger); background: var(--danger-50); }
+.log-row summary { cursor: pointer; list-style: none; }
+.log-row summary::-webkit-details-marker { display: none; }
+.log-row pre { margin: 8px 0 0; padding: 10px; border-radius: 12px; background: var(--sunken); font: 12px/1.45 var(--mono); white-space: pre-wrap; word-break: break-all; max-height: 240px; overflow: auto; }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; }
+.timeline li { display: grid; grid-template-columns: 20px 1fr auto; gap: 12px; align-items: start; padding: 10px 0; position: relative; }
+.timeline li::before { content: ""; position: absolute; left: 9px; top: 30px; bottom: -8px; width: 2px; background: #E6EAF1; }
+.timeline li:last-child::before { display: none; }
+.tl-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--brand-50); box-shadow: inset 0 0 0 5px var(--brand); }
+.tl-time { font-size: 13px; color: var(--ink-2); }
+.toasts { position: fixed; z-index: 40; left: 50%; bottom: 24px; transform: translateX(-50%); display: grid; gap: 8px; width: min(420px, calc(100% - 32px)); }
+.toast { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 16px; background: var(--ink); color: #fff; font-size: 14px; font-weight: 500; box-shadow: var(--shadow-pop); animation: toast-in .22s cubic-bezier(.2,.8,.2,1); }
+.toast svg { width: 18px; height: 18px; flex: none; }
+.toast[data-kind="ok"] svg { color: #6EE7A8; }
+.toast[data-kind="error"] svg { color: #FF9C8A; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before { transition: none !important; animation: none !important; }
-}
+@media (prefers-reduced-motion: reduce) { *, *::before { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"></span>Crystal Logistics</div>
-    <div class="session" id="session" hidden>
-      <span class="session-name" id="session-name"></span>
-      <span class="role-chip" id="session-role"></span>
-      <button class="btn btn-quiet" id="logout" type="button">Chiqish</button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- Ikonlar: bitta uslub — 24px, 2px chiziq, yumaloq uchlar -->
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15v2M12 10v7M17 6v11"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 9M22 21a7 7 0 0 0-4-6.3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="6" rx="1.5"/><rect x="2" y="16" width="6" height="6" rx="1.5"/><rect x="16" y="16" width="6" height="6" rx="1.5"/><path d="M12 8v4M5 16v-2h14v2"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="i-login" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4"/></symbol>
+  <symbol id="i-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><span class="logo-mark"><svg width="18" height="18" aria-hidden="true"><use href="#i-gem"/></svg></span>Crystal</div>
+    <nav class="nav" id="nav" aria-label="Bo‘limlar"></nav>
+    <div class="me" id="me" hidden>
+      <span class="avatar" id="me-avatar"></span>
+      <span class="me-text"><span class="me-name" id="me-name"></span><br><span class="me-role" id="me-role"></span></span>
+      <button class="icon-btn" id="logout" type="button" aria-label="Chiqish" title="Chiqish"><svg aria-hidden="true"><use href="#i-logout"/></svg></button>
     </div>
-  </div>
-</header>
-<nav class="tabs" aria-label="Bo‘limlar"><div class="tabs-inner" id="tabs" role="tablist"></div></nav>
+  </aside>
 
-<div class="layout" id="layout">
-  <main class="workspace" id="workspace" aria-live="polite">
-    <!-- Kirish -->
-    <section id="view-login">
-      <h1 class="view-title">Tizimga kirish</h1>
-      <p class="lead">Rolingizga qarab ish maydoni ochiladi: operator buyurtmalarni boshqaradi, kuryer o‘z yetkazmalarini topshiradi, admin foydalanuvchilarni yaratadi.</p>
-      <form id="login-form" novalidate style="max-width: 380px">
-        <div class="field"><label for="login-user">Login</label><input class="input" id="login-user" autocomplete="username" required></div>
-        <div class="field"><label for="login-pass">Parol</label><input class="input" id="login-pass" type="password" autocomplete="current-password" required></div>
-        <div id="login-error" class="notice notice-error" role="alert" hidden></div>
-        <div style="margin-top: 14px"><button class="btn btn-primary" type="submit" id="login-submit">Kirish</button></div>
+  <main class="main">
+    <div class="page-head" id="page-head">
+      <h1 class="page-title" id="page-title"></h1>
+      <div id="page-actions"></div>
+    </div>
+
+    <section id="view-login" class="login" hidden>
+      <form class="card" id="login-form" novalidate>
+        <h1>Kirish</h1>
+        <div class="field"><label for="login-user">Login</label><input class="input" id="login-user" autocomplete="username"></div>
+        <div class="field"><label for="login-pass">Parol</label><input class="input" id="login-pass" type="password" autocomplete="current-password"></div>
+        <p class="form-error" id="login-error" role="alert" hidden></p>
+        <button class="btn btn-primary" type="submit" id="login-submit">Kirish</button>
+        <div class="demo" aria-label="Namoyish hisoblari">
+          <button class="chip-btn" type="button" data-demo="admin">admin</button>
+          <button class="chip-btn" type="button" data-demo="op1">op1</button>
+          <button class="chip-btn" type="button" data-demo="ali">ali</button>
+          <button class="chip-btn" type="button" data-demo="vali">vali</button>
+        </div>
       </form>
-      <div style="margin-top: 28px; max-width: 520px">
-        <p class="hint">Namoyish hisoblari. Avval admin bilan kirib «Namoyish foydalanuvchilarini yaratish»ni bosing, so‘ng boshqa rolga o‘ting. Parol: <code>demo-parol-1</code></p>
-        <div class="demo-accounts">
-          <button class="btn btn-secondary btn-small" type="button" data-demo="admin">admin</button>
-          <button class="btn btn-secondary btn-small" type="button" data-demo="op1">op1 · operator</button>
-          <button class="btn btn-secondary btn-small" type="button" data-demo="ali">ali · kuryer</button>
-          <button class="btn btn-secondary btn-small" type="button" data-demo="vali">vali · kuryer</button>
-        </div>
-      </div>
     </section>
 
-    <!-- Operator / admin: buyurtmalar -->
     <section id="view-orders" hidden>
-      <h1 class="view-title">Buyurtmalar</h1>
-      <p class="lead">Buyurtma yarating va uni marshrut bo‘ylab olib boring. Har bosqichda faqat keyingi qadam ochiq.</p>
-
-      <div class="block">
-        <h2 class="block-title">Yangi buyurtma</h2>
-        <form id="order-form" class="inline-form" novalidate>
-          <div class="field"><label for="order-address">Yetkazish manzili</label><input class="input" id="order-address" placeholder="Masalan: Toshkent, Chilonzor 9-kvartal, 12-uy" maxlength="500" required></div>
-          <button class="btn btn-primary" type="submit">Buyurtma yaratish</button>
-        </form>
-        <div id="order-form-error" class="notice notice-error" role="alert" hidden style="margin-top: 10px"></div>
-      </div>
-
-      <div class="block" id="order-panel" hidden>
-        <div class="order-head">
-          <div class="parcel-label" aria-label="Buyurtma kodi"><span>Kod</span><span id="order-code"></span></div>
-          <span class="status" id="order-status"></span>
-          <button class="link-btn" type="button" id="order-refresh">Yangilash</button>
+      <div class="grid cols-2">
+        <div class="grid">
+          <form class="card" id="order-form" novalidate>
+            <div class="inline">
+              <div class="field"><label for="order-address">Yangi buyurtma manzili</label><input class="input" id="order-address" maxlength="500" placeholder="Toshkent, Chilonzor 9, 12-uy"></div>
+              <button class="btn btn-primary" type="submit"><svg aria-hidden="true"><use href="#i-plus"/></svg>Yaratish</button>
+            </div>
+          </form>
+          <div class="card" id="order-card"></div>
         </div>
-        <div class="route-wrap">
-          <div class="route-progress" id="route-progress" aria-hidden="true"></div>
-          <ol class="route" id="route" aria-label="Buyurtma marshruti"></ol>
-        </div>
-        <div class="next-step" id="next-step"></div>
-      </div>
-
-      <div class="block">
-        <h2 class="block-title">Ushbu sessiyadagi buyurtmalar</h2>
-        <form id="open-form" class="inline-form" novalidate style="margin-bottom: 14px">
-          <div class="field"><label for="open-code">Kod bo‘yicha ochish</label><input class="input code" id="open-code" placeholder="CRY-…" autocomplete="off"></div>
-          <button class="btn btn-secondary" type="submit">Ochish</button>
-        </form>
-        <div id="recent"></div>
-      </div>
-    </section>
-
-    <!-- Kuryer -->
-    <section id="view-courier" hidden>
-      <h1 class="view-title">Mening yetkazmalarim</h1>
-      <p class="lead">Sizga biriktirilgan buyurtmalar. Topshirish faqat buyurtma «Yo‘lda» bo‘lganda mumkin — boshqa kuryerning buyurtmasini topshira olmaysiz.</p>
-      <div style="margin-bottom: 14px"><button class="btn btn-secondary" type="button" id="courier-refresh">Ro‘yxatni yangilash</button></div>
-      <div id="courier-list"></div>
-    </section>
-
-    <!-- Admin: foydalanuvchilar -->
-    <section id="view-users" hidden>
-      <div>
-        <h2 class="block-title">Foydalanuvchilar</h2>
-        <p class="lead">Faqat admin ko‘radi. Yangi xodim yarating yoki namoyish uchun tayyor hisoblarni bir bosishda qo‘shing.</p>
-        <form id="user-form" class="inline-form" novalidate>
-          <div class="field"><label for="user-name">Login</label><input class="input" id="user-name" placeholder="masalan: ali" autocomplete="off" required></div>
-          <div class="field"><label for="user-pass">Parol</label><input class="input" id="user-pass" type="password" placeholder="kamida 8 belgi" autocomplete="new-password" required></div>
-          <div class="field" style="flex: 0 1 160px"><label for="user-role">Rol</label>
-            <select class="input" id="user-role"><option value="operator">Operator</option><option value="courier">Kuryer</option><option value="admin">Admin</option></select>
+        <div class="card">
+          <div class="card-title">So‘nggi buyurtmalar
+            <button class="icon-btn" type="button" id="recent-refresh" aria-label="Yangilash" title="Yangilash" style="margin:0"><svg aria-hidden="true"><use href="#i-refresh"/></svg></button>
           </div>
-          <button class="btn btn-primary" type="submit">Foydalanuvchi yaratish</button>
+          <div class="list" id="recent"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-courier" hidden>
+      <div class="card"><div class="list" id="courier-list"></div></div>
+    </section>
+
+    <section id="view-users" hidden>
+      <div class="grid cols-2">
+        <div class="card"><div class="card-title">Jamoa</div><div class="list" id="users"></div></div>
+        <form class="card grid" id="user-form" novalidate style="gap:14px">
+          <div class="card-title" style="margin:0">Yangi foydalanuvchi</div>
+          <div class="field"><label for="user-name">Login</label><input class="input" id="user-name" autocomplete="off"></div>
+          <div class="field"><label for="user-pass">Parol</label><input class="input" id="user-pass" type="password" autocomplete="new-password" placeholder="Kamida 8 belgi"></div>
+          <div class="field"><label for="user-role">Rol</label>
+            <select class="input" id="user-role"><option value="operator">Operator</option><option value="courier">Kuryer</option><option value="admin">Admin</option></select></div>
+          <button class="btn btn-primary" type="submit">Yaratish</button>
+          <button class="btn btn-ghost" type="button" id="seed-demo">Namoyish hisoblarini qo‘shish</button>
         </form>
-        <div id="user-form-msg" role="status" style="margin-top: 10px"></div>
-        <div style="margin: 16px 0"><button class="btn btn-secondary" type="button" id="seed-demo">Namoyish foydalanuvchilarini yaratish</button></div>
-        <div id="users"></div>
       </div>
     </section>
 
-    <!-- Dashboard -->
     <section id="view-dashboard" hidden>
-      <div class="dash-head">
-        <div><h1 class="view-title">Dashboard</h1><p class="lead" style="margin:0">Buyurtmalar oqimi va kuryerlar yuklamasi. Har 10 soniyada avtomatik yangilanadi.</p></div>
-        <div class="dash-meta"><span id="dash-updated"></span><button class="btn btn-secondary btn-small" type="button" id="dash-refresh">Yangilash</button></div>
-      </div>
-      <div class="tiles" id="tiles"></div>
+      <div class="kpis" id="kpis"></div>
       <div class="charts">
-        <figure class="chart" style="margin:0"><h2>Holatlar bo‘yicha</h2><p class="sub">Har bir holatda hozir nechta buyurtma bor</p><div id="chart-status"></div></figure>
-        <figure class="chart" style="margin:0"><h2>Yangi buyurtmalar, oxirgi 24 soat</h2><p class="sub">Har soatda yaratilgan buyurtmalar soni</p><div id="chart-hourly"></div></figure>
-        <figure class="chart" style="margin:0"><h2>Bosqichlar o‘rtacha davomiyligi</h2><p class="sub">Oldingi holatdan shu holatga o‘tish uchun ketgan vaqt</p><div id="chart-stages"></div></figure>
-        <figure class="chart" style="margin:0"><h2>Kuryerlar yuklamasi</h2><p class="sub">Topshirilgan va hozir qo‘lidagi buyurtmalar</p><div id="chart-couriers"></div></figure>
-      </div>
-      <div class="block">
-        <h2 class="block-title">Oxirgi buyurtmalar</h2>
-        <div id="dash-recent"></div>
+        <figure class="card chart" style="margin:0"><figcaption class="card-title">Holatlar</figcaption><div id="chart-status"></div></figure>
+        <figure class="card chart" style="margin:0"><figcaption class="card-title">Oxirgi 24 soat</figcaption><div id="chart-hourly"></div></figure>
+        <figure class="card chart" style="margin:0"><figcaption class="card-title">Bosqich vaqti</figcaption><div id="chart-stages"></div></figure>
+        <figure class="card chart" style="margin:0"><figcaption class="card-title">Kuryerlar</figcaption><div id="chart-couriers"></div></figure>
       </div>
     </section>
 
-    <!-- Arxitektura -->
+    <section id="view-track" hidden>
+      <div class="grid cols-2">
+        <form class="card" id="track-form" novalidate>
+          <div class="inline">
+            <div class="field"><label for="track-code">Buyurtma kodi</label><input class="input mono" id="track-code" placeholder="CRY-…" autocomplete="off"></div>
+            <button class="btn btn-primary" type="submit"><svg aria-hidden="true"><use href="#i-search"/></svg>Kuzatish</button>
+          </div>
+        </form>
+        <div class="card" id="track-result" role="status" hidden></div>
+      </div>
+    </section>
+
     <section id="view-arch" class="arch" hidden>
-      <div class="dash-head">
-        <div><h1 class="view-title">Tizim arxitekturasi</h1><p class="lead" style="margin:0">Jonli holat: har bir servis 5 soniyada tekshiriladi. Ramka rangi — servis va uning bazasi holati.</p></div>
-        <div class="dash-meta"><span id="arch-updated"></span></div>
+      <div class="grid">
+        <div class="card"><div id="arch-diagram"></div>
+          <div class="arch-legend">
+            <span><svg width="28" height="6" aria-hidden="true"><line x1="0" y1="3" x2="28" y2="3" stroke="#8792A6" stroke-width="1.6"/></svg>HTTP</span>
+            <span><svg width="28" height="6" aria-hidden="true"><line x1="0" y1="3" x2="28" y2="3" stroke="#C08A2A" stroke-width="1.6" stroke-dasharray="6 4"/></svg>Hodisa</span>
+            <span><svg width="28" height="6" aria-hidden="true"><line x1="0" y1="3" x2="28" y2="3" stroke="#C9D0DC" stroke-width="1.6"/></svg>Baza</span>
+          </div>
+        </div>
+        <div class="card"><div class="card-title">Servislar</div><div class="list" id="arch-list"></div></div>
       </div>
-      <div id="arch-diagram"></div>
-      <div class="arch-legend">
-        <span><svg viewBox="0 0 34 8" aria-hidden="true"><line x1="0" y1="4" x2="34" y2="4" class="edge sync" style="stroke:#1B2430;stroke-width:1.5"/></svg>Sinxron HTTP</span>
-        <span><svg viewBox="0 0 34 8" aria-hidden="true"><line x1="0" y1="4" x2="34" y2="4" style="stroke:#9A6300;stroke-width:1.5;stroke-dasharray:6 4"/></svg>Hodisa (RabbitMQ)</span>
-        <span><svg viewBox="0 0 34 8" aria-hidden="true"><line x1="0" y1="4" x2="34" y2="4" style="stroke:#AEB8C4;stroke-width:1.5"/></svg>O‘z bazasiga ulanish</span>
-        <span class="health" data-health="ok">✓ Ishlayapti</span>
-        <span class="health" data-health="degraded">! Qisman (broker yo‘q, outbox kutmoqda)</span>
-        <span class="health" data-health="fail">✕ Ishlamayapti</span>
-      </div>
-      <h2 class="block-title">Servislar holati</h2>
-      <div id="arch-table"></div>
-      <div class="facts">
-        <div><h3>Har bir servisning o‘z bazasi</h3><p>4 ta PostgreSQL, har biri alohida yopiq tarmoqda. Boshqa servis unga hatto tarmoqda ham ulana olmaydi.</p></div>
-        <div><h3>Token gateway’da tekshiriladi</h3><p>nginx har so‘rovni auth-service’da tekshiradi va servisga foydalanuvchi va rolini uzatadi. Imzo kaliti faqat auth-service’da.</p></div>
-        <div><h3>Hodisalar yo‘qolmaydi</h3><p>Holat o‘zgarishi va hodisa bitta tranzaksiyada (outbox) yoziladi. RabbitMQ o‘chsa ham buyurtmalar yaratiladi.</p></div>
-        <div><h3>Kuzatuv alohida o‘qish modeli</h3><p>tracking-service hodisalardan o‘z bazasini quradi. order-service ishlamasa ham mijoz kuzatuvi ishlaydi.</p></div>
-      </div>
+    </section>
+
+    <section id="view-log" hidden>
+      <div class="card"><div class="list" id="log"></div></div>
     </section>
   </main>
-
-  <aside class="rail">
-    <section class="rail-section" aria-labelledby="track-title">
-      <h2 id="track-title">Buyurtmani kuzatish</h2>
-      <p class="hint" style="margin-bottom: 12px">Mijozlar uchun ochiq: tizimga kirish shart emas. Manzil va kuryer ismi ko‘rsatilmaydi.</p>
-      <form id="track-form" class="inline-form" novalidate>
-        <div class="field"><label for="track-code" class="visually-hidden">Buyurtma kodi</label><input class="input code" id="track-code" placeholder="CRY-…" autocomplete="off"></div>
-        <button class="btn btn-secondary" type="submit">Kuzatish</button>
-      </form>
-      <div id="track-result" class="track-result" role="status"></div>
-    </section>
-
-    <section class="rail-section" aria-labelledby="log-title">
-      <h2 id="log-title">So‘rovlar jurnali</h2>
-      <p class="hint" style="margin-bottom: 12px">Har bir so‘rov gateway orqali o‘tadi. 401, 403 va 409 — xato emas, tizim qoidalari ishlayotganining isboti.</p>
-      <ol class="log" id="log"></ol>
-    </section>
-  </aside>
 </div>
-
+<div class="toasts" id="toasts" aria-live="polite"></div>
 <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
 <script>
 "use strict";
+/* ================= holat va yordamchilar ================= */
 const DEMO_PASSWORD = "demo-parol-1";
-const DEMO_USERS = [
-  { username: "op1", role: "operator" },
-  { username: "ali", role: "courier" },
-  { username: "vali", role: "courier" },
-];
+const DEMO_USERS = [{ username: "op1", role: "operator" }, { username: "ali", role: "courier" }, { username: "vali", role: "courier" }];
 const ROLE_NAMES = { admin: "Admin", operator: "Operator", courier: "Kuryer" };
 const STEPS = [
-  { status: "Yangi",      tone: "new",     action: "receive",  button: "Omborga qabul qilish", hint: "Buyurtma yaratildi. Posilka omborga kelganda qabul qiling." },
-  { status: "Omborda",    tone: "ware",    action: "dispatch", button: "Yo‘lga chiqarish",     hint: "Posilka omborda. Kuryer biriktiring, so‘ng yo‘lga chiqaring." },
-  { status: "Yo‘lda",     tone: "transit", action: "deliver",  button: "Topshirildi deb belgilash", hint: "Kuryer yo‘lda. Mijozga topshirilgach belgilang." },
-  { status: "Yetkazildi", tone: "done",    action: null,       button: null,                   hint: "Buyurtma mijozga topshirildi. Marshrut yakunlandi." },
+  { status: "Yangi",      tone: "new",     action: "receive",  button: "Omborga qabul qilish" },
+  { status: "Omborda",    tone: "ware",    action: "dispatch", button: "Yo‘lga chiqarish" },
+  { status: "Yo‘lda",     tone: "transit", action: "deliver",  button: "Topshirildi" },
+  { status: "Yetkazildi", tone: "done",    action: null },
 ];
 const TONE = Object.fromEntries(STEPS.map((s) => [s.status, s.tone]));
-
-const state = { token: null, refresh: null, user: null, order: null, assigned: {}, recent: [], tab: "login" };
+const PAGES = {
+  login:     { title: "",                  icon: "i-login",   view: "view-login",     label: "Kirish" },
+  orders:    { title: "Buyurtmalar",       icon: "i-box",     view: "view-orders",    label: "Buyurtmalar" },
+  courier:   { title: "Yetkazmalarim",     icon: "i-truck",   view: "view-courier",   label: "Yetkazmalarim" },
+  dashboard: { title: "Dashboard",         icon: "i-chart",   view: "view-dashboard", label: "Dashboard" },
+  users:     { title: "Foydalanuvchilar",  icon: "i-users",   view: "view-users",     label: "Foydalanuvchilar" },
+  track:     { title: "Kuzatish",          icon: "i-search",  view: "view-track",     label: "Kuzatish" },
+  arch:      { title: "Arxitektura",       icon: "i-network", view: "view-arch",      label: "Arxitektura" },
+  log:       { title: "So‘rovlar jurnali", icon: "i-list",    view: "view-log",       label: "Jurnal" },
+};
+const ROLE_PAGES = {
+  none: ["login", "track", "arch", "log"],
+  operator: ["orders", "dashboard", "track", "arch", "log"],
+  admin: ["orders", "dashboard", "users", "track", "arch", "log"],
+  courier: ["courier", "track", "arch", "log"],
+};
+const state = { token: null, refresh: null, user: null, order: null, assigned: {}, page: "login", logs: [] };
+const timers = {};
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const fmtTime = (iso) => { if (!iso) return ""; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString("uz-UZ", { hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "2-digit" }); };
+const icon = (id) => `<svg aria-hidden="true"><use href="#${id}"/></svg>`;
+const chip = (status) => `<span class="chip" data-tone="${TONE[status] || "new"}">${esc(status || "—")}</span>`;
+const fmtTime = (iso) => { if (!iso) return ""; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString("uz-UZ", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+const fmtNum = (n) => Number(n).toLocaleString("uz-UZ");
+const empty = (iconId, title, text = "") => `<div class="empty"><div class="empty-icon">${icon(iconId)}</div><div class="empty-title">${esc(title)}</div>${text ? `<div>${esc(text)}</div>` : ""}</div>`;
 
-/* ---------- API va jurnal ---------- */
+function toast(text, kind = "ok") {
+  const el = document.createElement("div");
+  el.className = "toast"; el.dataset.kind = kind; el.setAttribute("role", kind === "error" ? "alert" : "status");
+  el.innerHTML = `${icon(kind === "error" ? "i-alert" : "i-check")}<span>${esc(text)}</span>`;
+  $("toasts").append(el);
+  while ($("toasts").children.length > 2) $("toasts").firstElementChild.remove();
+  setTimeout(() => el.remove(), kind === "error" ? 5000 : 3000);
+}
+
+/* ================= API ================= */
 function logEntry(what, method, path, status, body) {
-  const li = document.createElement("li");
   const shown = { ...body };
   if (shown.access_token) shown.access_token = shown.access_token.slice(0, 20) + "…";
   if (shown.refresh_token) shown.refresh_token = shown.refresh_token.slice(0, 8) + "…";
-  li.innerHTML = `<div class="log-line"><span class="log-code" data-ok="${status < 400}">${status || "—"}</span>
-    <span class="log-what">${esc(what)}</span><span class="log-time">${new Date().toLocaleTimeString("uz-UZ")}</span></div>
-    <details><summary><span class="log-path">${esc(method)} ${esc(path)}</span></summary><pre>${esc(JSON.stringify(shown, null, 2))}</pre></details>`;
-  $("log").prepend(li);
+  state.logs.unshift({ what, method, path, status, body: shown, at: new Date() });
+  state.logs.length = Math.min(state.logs.length, 200);
+  if (state.page === "log") renderLog();
 }
 
 async function api(what, method, path, body, { auth = true, retried = false, quiet = false } = {}) {
@@ -466,510 +441,381 @@ async function api(what, method, path, body, { auth = true, retried = false, qui
   let response, data = {};
   try {
     response = await fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
-    try { data = await response.json(); } catch (_) { data = {}; }
+    data = await response.json().catch(() => ({}));
   } catch (_) {
     if (!quiet) logEntry(what, method, path, 0, { error: "Tarmoq xatosi" });
-    return { status: 0, data: { error: "Server bilan aloqa yo‘q. Internetni tekshiring." } };
+    return { status: 0, data: { error: "Server bilan aloqa yo‘q." } };
   }
-  // Access token 15 daqiqada tugaydi — bir marta jimgina yangilab, so‘rovni qaytaramiz.
-  if (response.status === 401 && auth && state.refresh && !retried) {
+  if (response.status === 401 && auth && state.refresh && !retried) {   // access token tugagan — jimgina yangilaymiz
     if (await refreshTokens()) return api(what, method, path, body, { auth, retried: true, quiet });
   }
   if (!quiet) logEntry(what, method, path, response.status, data);
-  if (response.status === 401 && auth && state.user) { signOut("Sessiya tugadi. Qayta kiring."); }
+  if (response.status === 401 && auth && state.user) signOut("Sessiya tugadi. Qayta kiring.");
   return { status: response.status, data };
 }
 
 async function refreshTokens() {
-  const response = await fetch("/api/v1/auth/refresh", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: state.refresh }) });
-  const data = await response.json().catch(() => ({}));
-  logEntry("Token yangilandi", "POST", "/api/v1/auth/refresh", response.status, data);
-  if (response.status !== 200) return false;
+  const r = await fetch("/api/v1/auth/refresh", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: state.refresh }) });
+  const data = await r.json().catch(() => ({}));
+  logEntry("Token yangilandi", "POST", "/api/v1/auth/refresh", r.status, data);
+  if (r.status !== 200) return false;
   state.token = data.access_token; state.refresh = data.refresh_token;
   return true;
 }
 
 async function busy(button, task) {
+  if (!button) return task();
   button.disabled = true; button.setAttribute("aria-busy", "true");
   try { return await task(); } finally { button.disabled = false; button.removeAttribute("aria-busy"); }
 }
 
-function showNotice(el, text, kind = "error") {
-  if (!text) { el.hidden = true; el.textContent = ""; return; }
-  el.hidden = false; el.className = `notice notice-${kind}`; el.textContent = text;
-}
-
-/* ---------- sessiya ---------- */
-const TABS = {
-  login:     { label: "Kirish",            view: "view-login" },
-  orders:    { label: "Buyurtmalar",       view: "view-orders" },
-  courier:   { label: "Yetkazmalarim",     view: "view-courier" },
-  dashboard: { label: "Dashboard",         view: "view-dashboard", wide: true },
-  users:     { label: "Foydalanuvchilar",  view: "view-users" },
-  arch:      { label: "Arxitektura",       view: "view-arch", wide: true },
-};
-const ROLE_TABS = {
-  none: ["login", "arch"],
-  operator: ["orders", "dashboard", "arch"],
-  admin: ["orders", "dashboard", "users", "arch"],
-  courier: ["courier", "arch"],
-};
-const timers = {};
-
+/* ================= navigatsiya ================= */
 function render() {
-  const role = state.user?.role;
-  $("session").hidden = !state.user;
-  if (state.user) { $("session-name").textContent = state.user.username; $("session-role").textContent = ROLE_NAMES[role]; }
-  const allowed = ROLE_TABS[role || "none"];
-  if (!allowed.includes(state.tab)) state.tab = allowed[0];
-  $("tabs").innerHTML = allowed.map((key) =>
-    `<button class="tab" role="tab" type="button" data-tab="${key}" aria-selected="${key === state.tab}" aria-controls="${TABS[key].view}">${TABS[key].label}</button>`).join("");
-  $("tabs").querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => openTab(b.dataset.tab)));
-  $("tabs").querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  Object.entries(TABS).forEach(([key, tab]) => { $(tab.view).hidden = key !== state.tab; });
-  $("layout").classList.toggle("wide", !!TABS[state.tab].wide);
+  const role = state.user?.role || "none";
+  const pages = ROLE_PAGES[role];
+  if (!pages.includes(state.page)) state.page = pages[0];
+  $("nav").innerHTML = pages.map((key) => `<button class="nav-item" type="button" data-page="${key}" ${key === state.page ? 'aria-current="page"' : ""}>${icon(PAGES[key].icon)}<span>${PAGES[key].label}</span></button>`).join("");
+  $("nav").querySelectorAll("[data-page]").forEach((b) => b.addEventListener("click", () => go(b.dataset.page)));
+  $("nav").querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  $("me").hidden = !state.user;
+  if (state.user) { $("me-name").textContent = state.user.username; $("me-role").textContent = ROLE_NAMES[state.user.role]; $("me-avatar").textContent = state.user.username[0]; }
+  Object.entries(PAGES).forEach(([key, p]) => { $(p.view).hidden = key !== state.page; });
+  $("page-head").hidden = state.page === "login";
+  $("page-title").textContent = PAGES[state.page].title;
+  $("page-actions").innerHTML = "";
   Object.values(timers).forEach(clearInterval);
-  if (state.tab === "users") loadUsers();
-  if (state.tab === "courier") loadCourier();
-  if (state.tab === "orders") renderRecent();
-  if (state.tab === "dashboard") { loadDashboard(); timers.dash = setInterval(() => document.hidden || loadDashboard(true), 10000); }
-  if (state.tab === "arch") { loadArch(); timers.arch = setInterval(() => document.hidden || loadArch(), 5000); }
+  const loaders = {
+    orders: loadOrders, courier: loadCourier, users: loadUsers, log: renderLog,
+    dashboard: () => { loadDashboard(); timers.d = setInterval(() => document.hidden || loadDashboard(true), 10000); },
+    arch: () => { loadArch(); timers.a = setInterval(() => document.hidden || loadArch(), 5000); },
+    track: () => $("track-code").focus(), login: () => $("login-user").focus(),
+  };
+  loaders[state.page]?.();
 }
+function go(page) { state.page = page; render(); window.scrollTo(0, 0); }
 
-function openTab(key) { state.tab = key; render(); }
-
-function signOut(message) {
-  state.token = state.refresh = state.user = state.order = null;
-  state.tab = "login";
-  $("order-panel").hidden = true;
-  render();
-  showNotice($("login-error"), message || "");
-  $("login-user").focus();
-}
-
+/* ================= kirish ================= */
 $("login-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const username = $("login-user").value.trim(), password = $("login-pass").value;
   $("login-user").setAttribute("aria-invalid", String(!username));
   $("login-pass").setAttribute("aria-invalid", String(!password));
-  if (!username || !password) return showNotice($("login-error"), "Login va parolni kiriting.");
+  if (!username || !password) return loginError("Login va parolni kiriting.");
   busy($("login-submit"), async () => {
     const { status, data } = await api(`${username} tizimga kirdi`, "POST", "/api/v1/auth/login", { username, password }, { auth: false });
-    if (status !== 200) return showNotice($("login-error"), status === 429 ? "Juda ko‘p urinish. Bir daqiqadan so‘ng qayta urinib ko‘ring." : "Login yoki parol noto‘g‘ri.");
-    showNotice($("login-error"), "");
-    state.token = data.access_token; state.refresh = data.refresh_token; state.user = data.user;
+    if (status !== 200) return loginError(status === 429 ? "Juda ko‘p urinish. Bir daqiqadan so‘ng urinib ko‘ring." : "Login yoki parol noto‘g‘ri.");
+    loginError("");
+    Object.assign(state, { token: data.access_token, refresh: data.refresh_token, user: data.user, page: "" });
     $("login-pass").value = "";
     render();
   });
 });
-
-document.querySelectorAll("[data-demo]").forEach((button) => button.addEventListener("click", () => {
-  $("login-user").value = button.dataset.demo;
-  $("login-pass").value = button.dataset.demo === "admin" ? "" : DEMO_PASSWORD;
-  (button.dataset.demo === "admin" ? $("login-pass") : $("login-submit")).focus();
+function loginError(text) { $("login-error").hidden = !text; $("login-error").textContent = text; }
+document.querySelectorAll("[data-demo]").forEach((b) => b.addEventListener("click", () => {
+  $("login-user").value = b.dataset.demo;
+  $("login-pass").value = b.dataset.demo === "admin" ? "" : DEMO_PASSWORD;
+  (b.dataset.demo === "admin" ? $("login-pass") : $("login-submit")).focus();
 }));
-
 $("logout").addEventListener("click", async () => {
-  const refresh = state.refresh;
-  await api("Tizimdan chiqildi", "POST", "/api/v1/auth/logout", { refresh_token: refresh }, { auth: false });
+  await api("Tizimdan chiqildi", "POST", "/api/v1/auth/logout", { refresh_token: state.refresh }, { auth: false });
   signOut();
 });
+function signOut(message) {
+  Object.assign(state, { token: null, refresh: null, user: null, order: null, page: "login" });
+  render();
+  if (message) loginError(message);
+}
 
-/* ---------- buyurtmalar ---------- */
+/* ================= buyurtmalar ================= */
 $("order-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const input = $("order-address"), address = input.value.trim();
   input.setAttribute("aria-invalid", String(!address));
-  if (!address) return showNotice($("order-form-error"), "Yetkazish manzilini kiriting.");
+  if (!address) return input.focus();
   busy(event.submitter, async () => {
     const { status, data } = await api("Buyurtma yaratildi", "POST", "/api/v1/orders", { address });
-    if (status !== 201) return showNotice($("order-form-error"), data.error || "Buyurtma yaratilmadi.");
-    showNotice($("order-form-error"), "");
+    if (status !== 201) return toast(data.error || "Buyurtma yaratilmadi.", "error");
     input.value = "";
-    state.recent.unshift({ code: data.code, address });
-    $("track-code").value = data.code;
+    toast("Buyurtma yaratildi");
     await openOrder(data.code);
+    loadRecent();
   });
 });
+$("recent-refresh").addEventListener("click", (e) => busy(e.currentTarget, loadRecent));
 
-$("open-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const code = $("open-code").value.trim();
-  if (code) busy(event.submitter, () => openOrder(code));
-});
-$("order-refresh").addEventListener("click", () => state.order && openOrder(state.order.code));
+function loadOrders() { renderOrder(); loadRecent(); }
+
+async function loadRecent() {
+  const { status, data } = await api("So‘nggi buyurtmalar", "GET", "/api/v1/stats", undefined, { quiet: true });
+  const box = $("recent");
+  if (status !== 200) return;
+  if (!data.recent.length) { box.innerHTML = empty("i-box", "Buyurtmalar yo‘q"); return; }
+  box.innerHTML = data.recent.map((o) => `<button class="row-btn" type="button" data-open="${esc(o.code)}" ${state.order?.code === o.code ? 'aria-current="true"' : ""}>
+    <span class="row-main"><span class="row-title mono">${esc(o.code)}</span><br><span class="row-sub">${esc(fmtTime(o.created_at))}</span></span>${chip(o.status)}</button>`).join("");
+  box.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => openOrder(b.dataset.open).then(loadRecent)));
+}
 
 async function openOrder(code) {
   const { status, data } = await api("Buyurtma ochildi", "GET", `/api/v1/orders/${encodeURIComponent(code)}`);
-  if (status !== 200) { $("order-panel").hidden = true; return; }
-  state.order = data;
-  renderOrder();
-  renderRecent();
+  if (status === 200) { state.order = data; renderOrder(); }
+  else toast(data.error || "Buyurtma topilmadi.", "error");
 }
 
-function renderOrder(message) {
-  const order = state.order, panel = $("order-panel");
-  panel.hidden = !order;
-  if (!order) return;
-  const index = STEPS.findIndex((s) => s.status === order.status);
-  const step = STEPS[index];
+function renderOrder() {
+  const card = $("order-card"), order = state.order;
+  if (!order) { card.innerHTML = empty("i-box", "Buyurtma tanlanmagan", "Yangisini yarating yoki ro‘yxatdan tanlang."); return; }
+  const index = STEPS.findIndex((s) => s.status === order.status), step = STEPS[index];
   const times = Object.fromEntries(order.history.map((h) => [h.status, h.created_at]));
-  $("order-code").textContent = order.code;
-  const badge = $("order-status"); badge.textContent = order.status; badge.dataset.tone = step.tone;
-
-  const route = $("route");
-  route.replaceChildren();
-  STEPS.forEach((s, i) => {
-    const li = document.createElement("li");
-    li.className = "stop"; li.dataset.tone = s.tone;
-    const finished = i === index && !s.action;  // oxirgi bekat: marshrut yakunlangan
-    li.dataset.state = i < index ? "done" : finished ? "complete" : i === index ? "current" : "upcoming";
-    if (i === index) li.setAttribute("aria-current", "step");
-    li.innerHTML = `<span class="stop-dot">${i < index || finished ? "✓" : i + 1}</span><span class="stop-name">${esc(s.status)}</span><span class="stop-time">${esc(fmtTime(times[s.status]))}</span>`;
-    route.appendChild(li);
-  });
-  // Chiziq joriy bekatgacha to‘ladi (4 bekat = 3 oraliq).
-  $("route-progress").style.width = `calc(${(index / 3) * 75}%)`;
-
-  const next = $("next-step");
-  const msg = message ? `<div class="notice notice-${message.kind}" role="${message.kind === "error" ? "alert" : "status"}">${esc(message.text)}</div>` : "";
-  if (!step.action) { next.innerHTML = `<h3>Marshrut yakunlandi</h3><p class="hint">${esc(step.hint)}</p>${msg}`; return; }
-  const assigned = state.assigned[order.code];
-  const courierForm = step.action === "dispatch" ? `
-    <form class="row" id="assign-form" novalidate>
-      <div class="field" style="margin:0; flex: 1 1 200px"><label for="assign-courier">Kuryer logini</label>
-        <input class="input" id="assign-courier" placeholder="masalan: ali" value="${esc(assigned || "")}" ${assigned ? "disabled" : ""}></div>
-      <button class="btn btn-secondary" type="submit" ${assigned ? "disabled" : ""}>${assigned ? "Kuryer biriktirilgan" : "Kuryer biriktirish"}</button>
-    </form>` : "";
-  next.innerHTML = `<h3>Keyingi qadam</h3><p class="hint">${esc(step.hint)}</p>${courierForm}
-    <div class="row"><button class="btn btn-step" data-tone="${step.tone}" type="button" id="step-btn">${esc(step.button)}</button></div>${msg}`;
-  $("step-btn").addEventListener("click", (e) => busy(e.currentTarget, () => advance(step)));
-  const form = $("assign-form");
-  if (form) form.addEventListener("submit", (e) => { e.preventDefault(); busy(e.submitter, assignCourier); });
+  const steps = STEPS.map((s, i) => {
+    const finished = i === index && !s.action;
+    const st = i < index ? "done" : finished ? "complete" : i === index ? "current" : "upcoming";
+    return `<li class="step" data-state="${st}" ${i === index ? 'aria-current="step"' : ""}>
+      <span class="step-dot">${st === "done" || st === "complete" ? icon("i-check") : i + 1}</span>
+      <span class="step-name">${esc(s.status)}</span><span class="step-time">${esc(fmtTime(times[s.status]))}</span></li>`;
+  }).join("");
+  let action;
+  if (!step.action) action = `<div class="done-note">${icon("i-check")} Mijozga topshirildi</div>`;
+  else {
+    const assigned = state.assigned[order.code];
+    const courier = step.action === "dispatch" && !assigned
+      ? `<div class="field"><label for="assign-courier">Kuryer</label><input class="input" id="assign-courier" placeholder="ali" autocomplete="off"></div>
+         <button class="btn btn-soft" type="button" id="assign-btn">Biriktirish</button>` : "";
+    action = `<div class="action-bar">${courier}<button class="btn btn-primary" type="button" id="step-btn">${esc(step.button)}</button></div>`;
+  }
+  card.innerHTML = `<div class="order-head"><span class="order-code">${esc(order.code)}</span>${chip(order.status)}</div>
+    <ol class="steps" aria-label="Buyurtma bosqichlari">${steps}</ol>${action}`;
+  $("step-btn")?.addEventListener("click", (e) => busy(e.currentTarget, () => advance(step)));
+  $("assign-btn")?.addEventListener("click", (e) => busy(e.currentTarget, assignCourier));
+  $("assign-courier")?.addEventListener("keydown", (e) => { if (e.key === "Enter") $("assign-btn").click(); });
 }
 
 async function advance(step) {
   const code = state.order.code;
-  const { status, data } = await api(`${step.button}`, "POST", `/api/v1/orders/${encodeURIComponent(code)}/${step.action}`);
-  if (status === 200) {
-    await openOrder(code);
-    return renderOrder({ kind: "ok", text: `Holat o‘zgardi: ${data.status}.` });
-  }
-  renderOrder({ kind: "error", text: data.error || "Amal bajarilmadi." });
+  const { status, data } = await api(step.button, "POST", `/api/v1/orders/${encodeURIComponent(code)}/${step.action}`);
+  if (status !== 200) return toast(data.error || "Amal bajarilmadi.", "error");
+  toast(`Holat: ${data.status}`);
+  await openOrder(code);
+  loadRecent();
 }
 
 async function assignCourier() {
   const input = $("assign-courier"), courier = input.value.trim().toLowerCase();
-  if (!courier) { input.setAttribute("aria-invalid", "true"); input.focus(); return; }
+  if (!courier) { input.setAttribute("aria-invalid", "true"); return input.focus(); }
   const code = state.order.code;
   const { status, data } = await api(`Kuryer ${courier} biriktirildi`, "POST", `/api/v1/orders/${encodeURIComponent(code)}/assign`, { courier });
-  if (status === 200) { state.assigned[code] = courier; return renderOrder({ kind: "ok", text: `${courier} biriktirildi. Endi yo‘lga chiqaring.` }); }
-  renderOrder({ kind: "error", text: data.error || "Kuryer biriktirilmadi." });
+  if (status !== 200) return toast(data.error || "Kuryer biriktirilmadi.", "error");
+  state.assigned[code] = courier;
+  toast(`${courier} biriktirildi`);
+  renderOrder();
 }
 
-function renderRecent() {
-  const box = $("recent");
-  if (!state.recent.length) { box.innerHTML = `<div class="empty">Hali buyurtma yo‘q. Yuqorida manzil kiriting va «Buyurtma yaratish»ni bosing.</div>`; return; }
-  box.innerHTML = `<table class="table"><thead><tr><th>Kod</th><th>Manzil</th><th></th></tr></thead><tbody>${
-    state.recent.map((o) => `<tr><td class="code">${esc(o.code)}</td><td>${esc(o.address)}</td>
-      <td style="text-align:right"><button class="link-btn" type="button" data-open="${esc(o.code)}">${state.order?.code === o.code ? "Ochiq" : "Ochish"}</button></td></tr>`).join("")
-  }</tbody></table>`;
-  box.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => openOrder(b.dataset.open)));
-}
-
-/* ---------- kuryer ---------- */
-$("courier-refresh").addEventListener("click", (e) => busy(e.currentTarget, loadCourier));
-
+/* ================= kuryer ================= */
 async function loadCourier() {
   const box = $("courier-list");
-  const { status, data } = await api("Yetkazmalar ro‘yxati", "GET", "/api/v1/couriers/me/assignments");
+  const { status, data } = await api("Yetkazmalar", "GET", "/api/v1/couriers/me/assignments");
   if (status !== 200) return;
-  if (!data.items.length) { box.innerHTML = `<div class="empty">Sizga hali buyurtma biriktirilmagan. Operator biriktirgach shu yerda paydo bo‘ladi.</div>`; return; }
-  const rows = await Promise.all(data.items.map(async (item) => {
-    const r = await api("Buyurtma holati", "GET", `/api/v1/orders/${encodeURIComponent(item.code)}`);
-    return { ...item, status: r.data.status };
-  }));
-  box.innerHTML = `<table class="table"><thead><tr><th>Kod</th><th>Holat</th><th>Biriktirilgan</th><th></th></tr></thead><tbody>${
-    rows.map((r) => `<tr><td class="code">${esc(r.code)}</td><td><span class="status" data-tone="${TONE[r.status] || "new"}">${esc(r.status || "—")}</span></td>
-      <td>${esc(fmtTime(r.assigned_at))}</td>
-      <td style="text-align:right">${r.status === "Yo‘lda"
-        ? `<button class="btn btn-step btn-small" data-tone="transit" type="button" data-deliver="${esc(r.code)}">Topshirildi deb belgilash</button>`
-        : r.status === "Yetkazildi" ? `<span class="hint">Topshirilgan</span>` : `<span class="hint">Hali yo‘lga chiqmagan</span>`}</td></tr>`).join("")
-  }</tbody></table><div id="courier-msg" role="status" style="margin-top:10px"></div>`;
+  if (!data.items.length) { box.innerHTML = empty("i-truck", "Hozircha yetkazma yo‘q"); return; }
+  const rows = await Promise.all(data.items.map(async (item) => ({ ...item, status: (await api("Buyurtma holati", "GET", `/api/v1/orders/${encodeURIComponent(item.code)}`, undefined, { quiet: true })).data.status })));
+  box.innerHTML = rows.map((r) => `<div class="row"><span class="row-main"><span class="row-title mono">${esc(r.code)}</span><br><span class="row-sub">${esc(fmtTime(r.assigned_at))}</span></span>
+    <span style="display:flex;gap:10px;align-items:center">${chip(r.status)}${r.status === "Yo‘lda" ? `<button class="btn btn-primary btn-sm" type="button" data-deliver="${esc(r.code)}">Topshirildi</button>` : ""}</span></div>`).join("");
   box.querySelectorAll("[data-deliver]").forEach((b) => b.addEventListener("click", (e) => busy(e.currentTarget, async () => {
     const { status, data } = await api("Buyurtma topshirildi", "POST", `/api/v1/orders/${encodeURIComponent(b.dataset.deliver)}/deliver`);
-    await loadCourier();
-    showNotice($("courier-msg"), status === 200 ? `${b.dataset.deliver} topshirildi.` : (data.error || "Topshirilmadi."), status === 200 ? "ok" : "error");
+    status === 200 ? toast("Topshirildi") : toast(data.error || "Topshirilmadi.", "error");
+    loadCourier();
   })));
 }
 
-/* ---------- admin ---------- */
+/* ================= foydalanuvchilar ================= */
 async function loadUsers() {
-  const { status, data } = await api("Foydalanuvchilar ro‘yxati", "GET", "/api/v1/auth/users");
+  const { status, data } = await api("Foydalanuvchilar", "GET", "/api/v1/auth/users", undefined, { quiet: true });
   if (status !== 200) return;
-  $("users").innerHTML = `<table class="table"><thead><tr><th>Login</th><th>Rol</th><th>Holat</th></tr></thead><tbody>${
-    data.items.map((u) => `<tr><td>${esc(u.username)}</td><td>${esc(ROLE_NAMES[u.role] || u.role)}</td><td>${u.active ? "Faol" : "Bloklangan"}</td></tr>`).join("")
-  }</tbody></table>`;
+  $("users").innerHTML = data.items.map((u) => `<div class="row"><span class="row-main" style="display:flex;gap:12px;align-items:center">
+    <span class="avatar">${esc(u.username[0])}</span><span><span class="row-title">${esc(u.username)}</span><br><span class="row-sub">${esc(ROLE_NAMES[u.role] || u.role)}</span></span></span>
+    ${u.active ? "" : `<span class="chip" data-tone="bad">Bloklangan</span>`}</div>`).join("");
 }
-
 $("user-form").addEventListener("submit", (event) => {
   event.preventDefault();
-  const username = $("user-name").value.trim(), password = $("user-pass").value, role = $("user-role").value;
+  const body = { username: $("user-name").value.trim(), password: $("user-pass").value, role: $("user-role").value };
   busy(event.submitter, async () => {
-    const { status, data } = await api(`Foydalanuvchi ${username} yaratildi`, "POST", "/api/v1/auth/users", { username, password, role });
-    if (status === 201) { $("user-name").value = ""; $("user-pass").value = ""; await loadUsers(); }
-    showNotice($("user-form-msg"), status === 201 ? `${data.username} (${ROLE_NAMES[data.role]}) yaratildi.` : (data.error || "Yaratilmadi."), status === 201 ? "ok" : "error");
+    const { status, data } = await api(`Foydalanuvchi ${body.username} yaratildi`, "POST", "/api/v1/auth/users", body);
+    if (status !== 201) return toast(data.error || "Yaratilmadi.", "error");
+    $("user-name").value = ""; $("user-pass").value = "";
+    toast(`${data.username} yaratildi`);
+    loadUsers();
   });
 });
-
-$("seed-demo").addEventListener("click", (event) => busy(event.currentTarget, async () => {
-  const created = [];
-  for (const u of DEMO_USERS) {
-    const { status } = await api(`Namoyish hisobi ${u.username}`, "POST", "/api/v1/auth/users", { ...u, password: DEMO_PASSWORD });
-    if (status === 201 || status === 409) created.push(u.username);
-  }
-  await loadUsers();
-  showNotice($("user-form-msg"), `Tayyor: ${created.join(", ")} (parol ${DEMO_PASSWORD}).`, "ok");
+$("seed-demo").addEventListener("click", (e) => busy(e.currentTarget, async () => {
+  for (const u of DEMO_USERS) await api(`Namoyish hisobi ${u.username}`, "POST", "/api/v1/auth/users", { ...u, password: DEMO_PASSWORD });
+  toast(`op1, ali, vali tayyor. Parol: ${DEMO_PASSWORD}`);
+  loadUsers();
 }));
 
-/* ---------- grafiklar (SVG, tashqi kutubxonasiz) ---------- */
-const COLORS = { new: "#5B6676", ware: "#9A6300", transit: "#1F55C7", done: "#137344", ink: "#1B2430" };
-const fmtNum = (n) => Number(n).toLocaleString("uz-UZ");
-function fmtDuration(seconds) {
-  if (seconds == null) return "—";
-  const s = Math.round(seconds);
-  if (s < 60) return `${s} s`;
-  if (s < 3600) return `${Math.floor(s / 60)} daq ${s % 60} s`;
-  return `${Math.floor(s / 3600)} soat ${Math.floor((s % 3600) / 60)} daq`;
-}
-function niceMax(value) {
-  if (value <= 4) return Math.max(1, Math.ceil(value));
-  const step = Math.pow(10, Math.floor(Math.log10(value)));
-  for (const m of [1, 2, 2.5, 5, 10]) if (m * step >= value) return m * step;
-  return value;
-}
-// Bar: 4px yumaloq uchi, asos tomoni to‘g‘ri burchak.
-function hBarPath(x, y, w, h, r = 4) {
-  if (w <= 0) return "";
-  r = Math.min(r, w, h / 2);
-  return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`;
-}
-function colPath(x, base, w, h, r = 4) {
-  if (h <= 0) return "";
-  r = Math.min(r, h, w / 2);
-  const top = base - h;
-  return `M${x},${base}V${top + r}Q${x},${top} ${x + r},${top}H${x + w - r}Q${x + w},${top} ${x + w},${top + r}V${base}Z`;
-}
-function tableView(headers, rows) {
-  return `<details><summary>Jadval ko‘rinishi</summary><table class="table"><thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
-    <tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></details>`;
-}
-
-// Gorizontal bar: kategoriya nomi chapda (rangga tayanmaydi), qiymat uchida.
-function barChart(el, rows, format = fmtNum, headers = ["Nomi", "Qiymat"]) {
-  const W = 520, labelW = 112, valueW = 92, barH = 22, gap = 16, top = 4;
-  const H = top + rows.length * (barH + gap) - gap + 4;
-  const max = Math.max(...rows.map((r) => r.value || 0), 0);
-  const scale = max ? (W - labelW - valueW) / max : 0;
-  const bars = rows.map((r, i) => {
-    const y = top + i * (barH + gap), w = (r.value || 0) * scale;
-    return `<g><text class="label" x="0" y="${y + barH / 2 + 4}">${esc(r.label)}</text>
-      <line class="grid" x1="${labelW}" y1="${y - 4}" x2="${labelW}" y2="${y + barH + 4}"/>
-      <path class="mark" d="${hBarPath(labelW, y, w, barH)}" fill="${r.color}"/>
-      <text class="value" x="${labelW + w + 8}" y="${y + barH / 2 + 4}">${esc(r.value == null ? "—" : format(r.value))}</text>
-      <rect class="hit" x="0" y="${y - gap / 2}" width="${W}" height="${barH + gap}" tabindex="0" data-tip="${esc(r.label)}: <b>${esc(r.value == null ? "ma’lumot yo‘q" : format(r.value))}</b>"/></g>`;
-  }).join("");
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(rows.map((r) => `${r.label}: ${r.value == null ? "—" : format(r.value)}`).join("; "))}">${bars}</svg>` +
-    tableView(headers, rows.map((r) => [r.label, r.value == null ? "—" : format(r.value)]));
-}
-
-// Ustunli grafik: vaqt bo‘yicha bitta qator (legend kerak emas — sarlavha aytadi).
-function columnChart(el, points) {
-  const W = 520, H = 210, left = 30, bottom = 24, top = 8, plotH = H - bottom - top, plotW = W - left;
-  const max = niceMax(Math.max(...points.map((p) => p.count), 0));
-  const slot = plotW / points.length, barW = Math.min(16, slot * 0.62);
-  const ticks = [0, max / 2, max].filter((v, i, a) => a.indexOf(v) === i && Number.isInteger(v));
-  const grid = ticks.map((t) => { const y = top + plotH - (t / max) * plotH;
-    return `<line class="grid" x1="${left}" x2="${W}" y1="${y}" y2="${y}"/><text x="${left - 6}" y="${y + 4}" text-anchor="end">${fmtNum(t)}</text>`; }).join("");
-  const cols = points.map((p, i) => {
-    const x = left + i * slot + (slot - barW) / 2, h = (p.count / max) * plotH, base = top + plotH;
-    const hour = new Date(p.hour).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
-    const label = i % 6 === 0 || i === points.length - 1 ? `<text x="${x + barW / 2}" y="${H - 6}" text-anchor="middle">${hour}</text>` : "";
-    return `<g><path class="mark" d="${colPath(x, base, barW, h)}" fill="${COLORS.ink}"/>${label}
-      <rect class="hit" x="${left + i * slot}" y="${top}" width="${slot}" height="${plotH}" tabindex="-1" data-tip="${hour}: <b>${fmtNum(p.count)}</b> ta buyurtma"/></g>`;
-  }).join("");
-  const total = points.reduce((a, p) => a + p.count, 0);
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Oxirgi 24 soatda ${total} ta buyurtma">${grid}${cols}</svg>` +
-    tableView(["Soat", "Buyurtmalar"], points.filter((p) => p.count).map((p) => [fmtTime(p.hour), p.count]));
-}
-
-// Kuryerlar: ikki qismli (topshirilgan + qo‘lida) bar, qismlar orasida 2px oq tirqish.
-function courierChart(el, items) {
-  if (!items.length) { el.innerHTML = `<div class="empty">Hali hech bir kuryerga buyurtma biriktirilmagan.</div>`; return; }
-  const W = 520, labelW = 112, valueW = 70, barH = 22, gap = 16, top = 4;
-  const H = top + items.length * (barH + gap) - gap + 4;
-  const max = Math.max(...items.map((c) => c.assigned));
-  const scale = (W - labelW - valueW) / max;
-  const rows = items.map((c, i) => {
-    const y = top + i * (barH + gap), wd = c.delivered * scale, wa = c.active * scale;
-    const gapPx = wd && wa ? 2 : 0;
-    const activePath = wa ? (wd ? hBarPath(labelW + wd + gapPx, y, wa - gapPx, barH) : hBarPath(labelW, y, wa, barH)) : "";
-    const doneShape = wd ? (wa ? `<rect x="${labelW}" y="${y}" width="${wd}" height="${barH}" fill="${COLORS.done}"/>` : `<path d="${hBarPath(labelW, y, wd, barH)}" fill="${COLORS.done}"/>`) : "";
-    return `<g><text class="label" x="0" y="${y + barH / 2 + 4}">${esc(c.courier)}</text>${doneShape}
-      ${activePath ? `<path d="${activePath}" fill="${COLORS.transit}"/>` : ""}
-      <text class="value" x="${labelW + (wd + wa) + 8}" y="${y + barH / 2 + 4}">${fmtNum(c.assigned)}</text>
-      <rect class="hit" x="0" y="${y - gap / 2}" width="${W}" height="${barH + gap}" tabindex="0"
-        data-tip="${esc(c.courier)}: <b>${c.delivered}</b> topshirilgan, <b>${c.active}</b> qo‘lida"/></g>`;
-  }).join("");
-  el.innerHTML = `<div class="legend"><span><i style="background:${COLORS.done}"></i>Topshirilgan</span><span><i style="background:${COLORS.transit}"></i>Qo‘lida</span></div>
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(items.map((c) => `${c.courier}: ${c.delivered} topshirilgan, ${c.active} qo‘lida`).join("; "))}">${rows}</svg>` +
-    tableView(["Kuryer", "Jami", "Topshirilgan", "Qo‘lida"], items.map((c) => [c.courier, c.assigned, c.delivered, c.active]));
-}
-
-// Tooltip: sichqoncha va klaviatura (Tab bilan fokus) uchun bitta element.
-const tooltip = $("tooltip");
-function showTip(target, x, y) { tooltip.innerHTML = target.dataset.tip; tooltip.hidden = false;
-  const r = tooltip.getBoundingClientRect(); tooltip.style.left = `${Math.min(x + 14, innerWidth - r.width - 8)}px`; tooltip.style.top = `${y - r.height - 10}px`; }
-document.addEventListener("mousemove", (e) => { const t = e.target.closest?.("[data-tip]"); t ? showTip(t, e.clientX, e.clientY) : (tooltip.hidden = true); });
-document.addEventListener("focusin", (e) => { const t = e.target.closest?.("[data-tip]"); if (t) { const b = t.getBoundingClientRect(); showTip(t, b.left + b.width / 2, b.top); } });
-document.addEventListener("focusout", () => { tooltip.hidden = true; });
-document.addEventListener("scroll", () => { tooltip.hidden = true; }, true);
-
-/* ---------- dashboard ---------- */
-$("dash-refresh").addEventListener("click", (e) => busy(e.currentTarget, () => loadDashboard()));
-
-async function loadDashboard(quiet = false) {
-  const [orders, couriers] = await Promise.all([
-    api("Dashboard ko‘rsatkichlari", "GET", "/api/v1/stats", undefined, { quiet }),
-    api("Kuryerlar yuklamasi", "GET", "/api/v1/couriers/stats", undefined, { quiet }),
-  ]);
-  if (orders.status !== 200) return;
-  const d = orders.data, by = d.by_status;
-  const deliveredShare = d.total ? Math.round((by["Yetkazildi"] / d.total) * 100) : 0;
-  $("tiles").innerHTML = [
-    [fmtNum(d.total), "Jami buyurtmalar"],
-    [fmtNum(by["Yo‘lda"]), "Hozir yo‘lda"],
-    [`${deliveredShare}%`, `Yetkazilgan (${fmtNum(by["Yetkazildi"])} ta)`],
-    [fmtDuration(d.delivery_avg_seconds), "O‘rtacha yetkazish vaqti"],
-  ].map(([v, l]) => `<div class="tile"><div class="tile-value">${esc(v)}</div><div class="tile-label">${esc(l)}</div></div>`).join("");
-
-  if (!d.total) {
-    const empty = `<div class="empty">Hali buyurtma yo‘q. «Buyurtmalar» bo‘limida birinchisini yarating.</div>`;
-    ["chart-status", "chart-hourly", "chart-stages"].forEach((id) => { $(id).innerHTML = empty; });
-  } else {
-    barChart($("chart-status"), STEPS.map((s) => ({ label: s.status, value: by[s.status], color: COLORS[s.tone] })), fmtNum, ["Holat", "Buyurtmalar"]);
-    columnChart($("chart-hourly"), d.created_per_hour);
-    const stages = [["receive", "Omborda", "ware"], ["dispatch", "Yo‘lda", "transit"], ["deliver", "Yetkazildi", "done"]];
-    barChart($("chart-stages"), stages.map(([a, label, tone]) => ({ label, value: d.stage_avg_seconds[a], color: COLORS[tone] })), fmtDuration, ["Bosqich", "O‘rtacha vaqt"]);
-  }
-  courierChart($("chart-couriers"), couriers.status === 200 ? couriers.data.items : []);
-
-  $("dash-recent").innerHTML = d.recent.length ? `<table class="table"><thead><tr><th>Kod</th><th>Holat</th><th>Yaratilgan</th><th>Oxirgi o‘zgarish</th><th></th></tr></thead><tbody>${
-    d.recent.map((o) => `<tr><td class="code">${esc(o.code)}</td><td><span class="status" data-tone="${TONE[o.status]}">${esc(o.status)}</span></td>
-      <td>${esc(fmtTime(o.created_at))}</td><td>${esc(fmtTime(o.updated_at))}</td>
-      <td style="text-align:right"><button class="link-btn" type="button" data-goto="${esc(o.code)}">Ochish</button></td></tr>`).join("")}</tbody></table>`
-    : `<div class="empty">Hali buyurtma yo‘q.</div>`;
-  $("dash-recent").querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", async () => { openTab("orders"); await openOrder(b.dataset.goto); }));
-  $("dash-updated").textContent = `Yangilandi: ${new Date().toLocaleTimeString("uz-UZ")}`;
-}
-
-/* ---------- arxitektura (jonli) ---------- */
-const NODES = {
-  client:   { x: 405, y: 16,  w: 150, h: 52, name: "Mijoz", role: "brauzer, curl" },
-  gateway:  { x: 380, y: 104, w: 200, h: 56, name: "gateway", role: "nginx, JWT tekshiruvi" },
-  order:    { x: 65,  y: 214, w: 170, h: 60, name: "order-service", role: "buyurtma, holatlar" },
-  courier:  { x: 285, y: 214, w: 170, h: 60, name: "courier-service", role: "kuryer biriktirish" },
-  auth:     { x: 505, y: 214, w: 170, h: 60, name: "auth-service", role: "login, JWT, rollar" },
-  tracking: { x: 725, y: 214, w: 170, h: 60, name: "tracking-service", role: "ommaviy kuzatuv" },
-  "order-db":    { x: 85,  y: 330, w: 130, h: 50, name: "order-db", role: "PostgreSQL", db: true },
-  "courier-db":  { x: 305, y: 330, w: 130, h: 50, name: "courier-db", role: "PostgreSQL", db: true },
-  "auth-db":     { x: 525, y: 330, w: 130, h: 50, name: "auth-db", role: "PostgreSQL", db: true },
-  "tracking-db": { x: 745, y: 330, w: 130, h: 50, name: "tracking-db", role: "PostgreSQL", db: true },
-  rabbitmq: { x: 65,  y: 436, w: 830, h: 46, name: "RabbitMQ", role: "crystal.events — order.created, order.status_changed, courier.assigned" },
-};
-const BADGE = { ok: "✓", degraded: "!", fail: "✕", unknown: "…" };
-const STATE_TEXT = { ok: "✓ ishlayapti", degraded: "! qisman", fail: "✕ ishlamayapti", unknown: "… tekshirilmoqda" };
-const cx = (n) => NODES[n].x + NODES[n].w / 2;
-
-function archSvg(health) {
-  const node = (id) => { const n = NODES[id], h = health[id] || "unknown", wide = id === "rabbitmq";
-    return `<g class="node${n.db ? " db" : ""}" data-health="${h}" ${id === "client" ? "" : `tabindex="0" data-tip="${esc(n.name)}: ${esc(STATE_TEXT[h])}"`}>
-      <rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="${n.db ? 14 : 8}"/>
-      <text class="name" x="${n.x + 12}" y="${n.y + 21}">${esc(n.name)}</text>
-      <text class="role" x="${n.x + 12}" y="${n.y + (wide ? 37 : 38)}">${esc(n.role)}</text>
-      ${id === "client" ? "" : `<g class="badge" aria-hidden="true"><circle cx="${n.x + n.w - 16}" cy="${n.y + 16}" r="9"/><text x="${n.x + n.w - 16}" y="${n.y + 20}" text-anchor="middle">${BADGE[h]}</text></g>`}</g>`; };
-  const svc = ["order", "courier", "auth", "tracking"];
-  const toServices = svc.map((s) => `<path class="edge sync" d="M480,160 V188 H${cx(s)} V214" marker-end="url(#arrow)"/>`).join("");
-  const toDb = svc.map((s) => `<line class="edge data" x1="${cx(s)}" y1="274" x2="${cx(s)}" y2="330"/>`).join("");
-  const ev = (s, start, end) => `<line class="edge event" x1="${cx(s) + 74}" y1="274" x2="${cx(s) + 74}" y2="436" ${start ? 'marker-start="url(#arrow-ev)"' : ""} ${end ? 'marker-end="url(#arrow-ev)"' : ""}/>`;
-  return `<svg viewBox="0 0 960 524" role="img" aria-label="Arxitektura: gateway to‘rtta servisga yo‘naltiradi, har bir servisning o‘z PostgreSQL bazasi bor, servislar RabbitMQ orqali hodisa almashadi">
-    <defs>
-      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1B2430"/></marker>
-      <marker id="arrow-ev" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#9A6300"/></marker>
-    </defs>
-    <rect class="zone" x="40" y="196" width="880" height="318" rx="12"/>
-    <text class="zone-label" x="56" y="504">Ichki tarmoq — tashqaridan faqat gateway orqali</text>
-    <path class="edge sync" d="M480,68 V104" marker-end="url(#arrow)"/><text class="edge-label" x="488" y="90">HTTPS :8000</text>
-    ${toServices}${toDb}
-    <line class="edge sync" x1="235" y1="244" x2="285" y2="244" marker-start="url(#arrow)" marker-end="url(#arrow)"/><text class="edge-label" x="246" y="238">HTTP</text>
-    <line class="edge sync" x1="455" y1="244" x2="505" y2="244" marker-end="url(#arrow)"/><text class="edge-label" x="466" y="238">HTTP</text>
-    ${ev("order", false, true)}<text class="edge-label" x="${cx("order") + 80}" y="420">chiqaradi</text>
-    ${ev("courier", true, true)}<text class="edge-label" x="${cx("courier") + 80}" y="420">chiqaradi / oladi</text>
-    ${ev("tracking", true, false)}<text class="edge-label" x="${cx("tracking") + 68}" y="420" text-anchor="end">oladi</text>
-    ${Object.keys(NODES).map(node).join("")}
-  </svg>`;
-}
-
-async function probe(path) {
-  const started = performance.now();
-  try {
-    const r = await fetch(path, { cache: "no-store" });
-    const data = await r.json().catch(() => ({}));
-    return { status: r.status, data, ms: Math.round(performance.now() - started) };
-  } catch (_) { return { status: 0, data: {}, ms: null }; }
-}
-
-async function loadArch() {
-  const svc = ["auth", "order", "courier", "tracking"];
-  const [gw, ...results] = await Promise.all([probe("/health"), ...svc.map((s) => probe(`/health/${s}`))]);
-  const health = { gateway: gw.status === 200 ? "ok" : "fail" };
-  const brokers = [];
-  svc.forEach((s, i) => {
-    const r = results[i], checks = r.data.checks || {};
-    health[s] = r.status === 200 ? (r.data.status === "ok" ? "ok" : "degraded") : "fail";
-    health[`${s}-db`] = checks.database ? (checks.database === "ok" ? "ok" : "fail") : (r.status === 503 ? "fail" : "unknown");
-    if (checks.broker) brokers.push(checks.broker);
-  });
-  health.rabbitmq = !brokers.length ? "unknown" : brokers.includes("ok") ? (brokers.every((b) => b === "ok") ? "ok" : "degraded") : "fail";
-  $("arch-diagram").innerHTML = archSvg(health);
-  const label = { ok: "✓ Ishlayapti", degraded: "! Qisman", fail: "✕ Ishlamayapti", unknown: "—" };
-  const check = (v) => v == null ? "—" : v === "ok" ? "✓" : "✕";
-  $("arch-table").innerHTML = `<table class="table"><thead><tr><th>Servis</th><th>Holat</th><th>Baza</th><th>Broker</th><th>Outbox</th><th>Javob vaqti</th></tr></thead><tbody>
-    <tr><td>gateway</td><td><span class="health" data-health="${health.gateway}">${label[health.gateway]}</span></td><td>—</td><td>—</td><td>—</td><td>${gw.ms ?? "—"} ms</td></tr>
-    ${svc.map((s, i) => { const c = results[i].data.checks || {}; return `<tr><td>${s}-service</td>
-      <td><span class="health" data-health="${health[s]}">${label[health[s]]}</span></td>
-      <td>${check(c.database)}</td><td>${check(c.broker)}</td><td>${check(c.outbox_relay)}</td><td>${results[i].ms ?? "—"} ms</td></tr>`; }).join("")}
-  </tbody></table>`;
-  $("arch-updated").textContent = `Tekshirildi: ${new Date().toLocaleTimeString("uz-UZ")}`;
-}
-
-/* ---------- ommaviy kuzatuv ---------- */
+/* ================= kuzatish ================= */
 $("track-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const code = $("track-code").value.trim();
   if (!code) return $("track-code").focus();
   busy(event.submitter, async () => {
     const { status, data } = await api("Ommaviy kuzatuv", "GET", `/api/v1/tracking/${encodeURIComponent(code)}`, undefined, { auth: false });
-    const box = $("track-result");
-    if (status !== 200) { box.innerHTML = `<div class="notice notice-error">Bu kod bo‘yicha ma’lumot topilmadi. Kodni tekshiring yoki bir necha soniyadan so‘ng qayta urinib ko‘ring.</div>`; return; }
-    const names = { "order.created": "Buyurtma yaratildi", "order.status_changed": "Holat o‘zgardi", "courier.assigned": "Kuryer biriktirildi" };
-    box.innerHTML = `<div><span class="status" data-tone="${TONE[data.status]}">${esc(data.status)}</span></div>
-      <ol class="timeline">${data.timeline.map((t) => `<li>${esc(names[t.event] || t.event)}${t.status ? `: ${esc(t.status)}` : ""}<time>${esc(fmtTime(t.at))}</time></li>`).join("")}</ol>`;
+    const box = $("track-result"); box.hidden = false;
+    if (status !== 200) { box.innerHTML = empty("i-search", "Topilmadi", "Kodni tekshiring."); return; }
+    const names = { "order.created": "Yaratildi", "order.status_changed": "Holat o‘zgardi", "courier.assigned": "Kuryer biriktirildi" };
+    box.innerHTML = `<div class="order-head"><span class="order-code">${esc(data.code)}</span>${chip(data.status)}</div>
+      <ol class="timeline">${data.timeline.map((t) => `<li><span class="tl-dot"></span><span style="font-weight:600">${esc(t.status || names[t.event] || t.event)}</span><span class="tl-time">${esc(fmtTime(t.at))}</span></li>`).join("")}</ol>`;
   });
 });
 
+/* ================= jurnal ================= */
+function renderLog() {
+  const box = $("log");
+  if (!state.logs.length) { box.innerHTML = empty("i-list", "So‘rovlar yo‘q"); return; }
+  box.innerHTML = state.logs.map((l) => `<div class="log-row"><span class="code-badge" data-ok="${l.status > 0 && l.status < 400}">${l.status || "—"}</span>
+    <details><summary><span class="row-title">${esc(l.what)}</span><br><span class="row-sub mono">${esc(l.method)} ${esc(l.path)}</span></summary><pre>${esc(JSON.stringify(l.body, null, 2))}</pre></details>
+    <span class="tl-time num">${l.at.toLocaleTimeString("uz-UZ")}</span></div>`).join("");
+}
+
+/* ================= grafiklar (SVG, kutubxonasiz) ================= */
+const COLORS = { new: "#5B6676", ware: "#9A6300", transit: "#1F55C7", done: "#137344", brand: "#2C62DE" };
+function fmtDuration(seconds) {
+  if (seconds == null) return "—";
+  const s = Math.round(seconds);
+  if (s < 60) return `${s} s`;
+  if (s < 3600) return `${Math.floor(s / 60)} daq`;
+  return `${Math.floor(s / 3600)} soat ${Math.floor((s % 3600) / 60)} daq`;
+}
+const niceMax = (v) => { if (v <= 4) return Math.max(1, Math.ceil(v)); const p = Math.pow(10, Math.floor(Math.log10(v))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p; return v; };
+const hBar = (x, y, w, h, r = 7) => { if (w <= 0) return ""; r = Math.min(r, w, h / 2); return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`; };
+const col = (x, b, w, h, r = 5) => { if (h <= 0) return ""; r = Math.min(r, h, w / 2); const t = b - h; return `M${x},${b}V${t + r}Q${x},${t} ${x + r},${t}H${x + w - r}Q${x + w},${t} ${x + w},${t + r}V${b}Z`; };
+const tableView = (heads, rows) => `<details><summary>Jadval</summary><table><tr>${heads.map((h) => `<th>${esc(h)}</th>`).join("")}</tr>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></details>`;
+
+function barChart(el, rows, format, heads) {
+  const W = 480, labelW = 92, valueW = 70, barH = 14, gap = 22;
+  const H = rows.length * (barH + gap) - gap + 2, max = Math.max(...rows.map((r) => r.value || 0), 0), plot = W - labelW - valueW;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(rows.map((r) => `${r.label}: ${format(r.value)}`).join("; "))}">${rows.map((r, i) => {
+    const y = i * (barH + gap), w = max ? (r.value || 0) / max * plot : 0;
+    return `<text class="label" x="0" y="${y + barH - 2}">${esc(r.label)}</text><rect class="track" x="${labelW}" y="${y}" width="${plot}" height="${barH}" rx="7"/>
+      <path d="${hBar(labelW, y, w, barH)}" fill="${r.color}"/><text class="value" x="${W}" y="${y + barH - 2}" text-anchor="end">${esc(format(r.value))}</text>
+      <rect class="hit" x="0" y="${y - gap / 2}" width="${W}" height="${barH + gap}" tabindex="0" data-tip="${esc(r.label)}: <b>${esc(format(r.value))}</b>"/>`;
+  }).join("")}</svg>` + tableView(heads, rows.map((r) => [r.label, format(r.value)]));
+}
+
+function columnChart(el, points) {
+  const W = 480, H = 190, left = 26, bottom = 22, plotH = H - bottom - 6, plotW = W - left;
+  const max = niceMax(Math.max(...points.map((p) => p.count), 0)), slot = plotW / points.length, bw = Math.min(12, slot * .6);
+  const ticks = [0, max].map((t) => { const y = 6 + plotH - t / max * plotH; return `<line class="grid" x1="${left}" x2="${W}" y1="${y}" y2="${y}"/><text x="${left - 8}" y="${y + 4}" text-anchor="end">${t}</text>`; }).join("");
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Oxirgi 24 soat: ${points.reduce((a, p) => a + p.count, 0)} ta buyurtma">${ticks}${points.map((p, i) => {
+    const x = left + i * slot + (slot - bw) / 2, h = p.count / max * plotH, hour = new Date(p.hour).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+    return `<path d="${col(x, 6 + plotH, bw, h)}" fill="${COLORS.brand}"/>${i % 6 === 0 || i === points.length - 1 ? `<text x="${x + bw / 2}" y="${H - 4}" text-anchor="middle">${hour}</text>` : ""}
+      <rect class="hit" x="${left + i * slot}" y="6" width="${slot}" height="${plotH}" data-tip="${hour}: <b>${p.count}</b>"/>`;
+  }).join("")}</svg>` + tableView(["Soat", "Soni"], points.filter((p) => p.count).map((p) => [fmtTime(p.hour), p.count]));
+}
+
+function courierChart(el, items) {
+  if (!items.length) { el.innerHTML = empty("i-truck", "Ma’lumot yo‘q"); return; }
+  const W = 480, labelW = 92, valueW = 40, barH = 14, gap = 22, H = items.length * (barH + gap) - gap + 2;
+  const max = Math.max(...items.map((c) => c.assigned)), plot = W - labelW - valueW;
+  el.innerHTML = `<div class="legend" style="margin-bottom:14px"><span><i style="background:${COLORS.done}"></i>Topshirilgan</span><span><i style="background:${COLORS.transit}"></i>Qo‘lida</span></div>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(items.map((c) => `${c.courier}: ${c.delivered} topshirilgan, ${c.active} qo‘lida`).join("; "))}">${items.map((c, i) => {
+      const y = i * (barH + gap), wd = c.delivered / max * plot, wa = c.active / max * plot, g = wd && wa ? 2 : 0;
+      const left = wd ? (wa ? `<path d="M${labelW + 7},${y}H${labelW + wd}V${y + barH}H${labelW + 7}Q${labelW},${y + barH} ${labelW},${y + barH - 7}V${y + 7}Q${labelW},${y} ${labelW + 7},${y}Z" fill="${COLORS.done}"/>`
+                                 : `<rect x="${labelW}" y="${y}" width="${wd}" height="${barH}" rx="7" fill="${COLORS.done}"/>`) : "";
+      const right = wa ? (wd ? `<path d="${hBar(labelW + wd + g, y, wa - g, barH)}" fill="${COLORS.transit}"/>` : `<rect x="${labelW}" y="${y}" width="${wa}" height="${barH}" rx="7" fill="${COLORS.transit}"/>`) : "";
+      return `<text class="label" x="0" y="${y + barH - 2}">${esc(c.courier)}</text><rect class="track" x="${labelW}" y="${y}" width="${plot}" height="${barH}" rx="7"/>${left}${right}
+        <text class="value" x="${W}" y="${y + barH - 2}" text-anchor="end">${c.assigned}</text>
+        <rect class="hit" x="0" y="${y - gap / 2}" width="${W}" height="${barH + gap}" tabindex="0" data-tip="${esc(c.courier)}: <b>${c.delivered}</b> topshirilgan, <b>${c.active}</b> qo‘lida"/>`;
+    }).join("")}</svg>` + tableView(["Kuryer", "Topshirilgan", "Qo‘lida"], items.map((c) => [c.courier, c.delivered, c.active]));
+}
+
+const tooltip = $("tooltip");
+function showTip(t, x, y) { tooltip.innerHTML = t.dataset.tip; tooltip.hidden = false; const r = tooltip.getBoundingClientRect(); tooltip.style.left = `${Math.min(x + 14, innerWidth - r.width - 8)}px`; tooltip.style.top = `${Math.max(8, y - r.height - 12)}px`; }
+document.addEventListener("mousemove", (e) => { const t = e.target.closest?.("[data-tip]"); t ? showTip(t, e.clientX, e.clientY) : (tooltip.hidden = true); });
+document.addEventListener("focusin", (e) => { const t = e.target.closest?.("[data-tip]"); if (t) { const b = t.getBoundingClientRect(); showTip(t, b.left + b.width / 2, b.top); } });
+document.addEventListener("focusout", () => { tooltip.hidden = true; });
+document.addEventListener("scroll", () => { tooltip.hidden = true; }, true);
+
+/* ================= dashboard ================= */
+async function loadDashboard(quiet = false) {
+  const [o, c] = await Promise.all([api("Dashboard", "GET", "/api/v1/stats", undefined, { quiet }), api("Kuryerlar", "GET", "/api/v1/couriers/stats", undefined, { quiet })]);
+  if (o.status !== 200) return;
+  const d = o.data, by = d.by_status, share = d.total ? Math.round(by["Yetkazildi"] / d.total * 100) : 0;
+  $("page-actions").innerHTML = `<span class="meta num">${new Date().toLocaleTimeString("uz-UZ")}</span>`;
+  const kpi = (iconId, tone, value, label) => `<div class="card kpi"><span class="kpi-icon" style="background:var(--${tone}-50);color:var(--${tone})">${icon(iconId)}</span>
+    <div><div class="kpi-value">${esc(value)}</div><div class="kpi-label">${esc(label)}</div></div></div>`;
+  $("kpis").innerHTML = kpi("i-box", "brand", fmtNum(d.total), "Jami buyurtmalar") + kpi("i-truck", "transit", fmtNum(by["Yo‘lda"]), "Yo‘lda")
+    + kpi("i-check", "done", `${share}%`, "Yetkazilgan") + kpi("i-clock", "ware", fmtDuration(d.delivery_avg_seconds), "O‘rtacha yetkazish");
+  if (!d.total) { ["chart-status", "chart-hourly", "chart-stages"].forEach((id) => { $(id).innerHTML = empty("i-chart", "Ma’lumot yo‘q"); }); }
+  else {
+    barChart($("chart-status"), STEPS.map((s) => ({ label: s.status, value: by[s.status], color: COLORS[s.tone] })), fmtNum, ["Holat", "Soni"]);
+    columnChart($("chart-hourly"), d.created_per_hour);
+    barChart($("chart-stages"), [["receive", "Omborda", "ware"], ["dispatch", "Yo‘lda", "transit"], ["deliver", "Yetkazildi", "done"]]
+      .map(([a, label, tone]) => ({ label, value: d.stage_avg_seconds[a], color: COLORS[tone] })), fmtDuration, ["Bosqich", "O‘rtacha"]);
+  }
+  courierChart($("chart-couriers"), c.status === 200 ? c.data.items : []);
+}
+
+/* ================= arxitektura (jonli) ================= */
+const NODES = {
+  client:   { x: 405, y: 12,  w: 150, h: 48, name: "Mijoz", role: "brauzer" },
+  gateway:  { x: 380, y: 98,  w: 200, h: 54, name: "gateway", role: "nginx, JWT" },
+  order:    { x: 60,  y: 206, w: 180, h: 56, name: "order-service", role: "buyurtmalar" },
+  courier:  { x: 280, y: 206, w: 180, h: 56, name: "courier-service", role: "kuryerlar" },
+  auth:     { x: 500, y: 206, w: 180, h: 56, name: "auth-service", role: "login, rollar" },
+  tracking: { x: 720, y: 206, w: 180, h: 56, name: "tracking-service", role: "kuzatuv" },
+  "order-db":    { x: 85,  y: 316, w: 130, h: 46, name: "order-db", role: "PostgreSQL", db: true },
+  "courier-db":  { x: 305, y: 316, w: 130, h: 46, name: "courier-db", role: "PostgreSQL", db: true },
+  "auth-db":     { x: 525, y: 316, w: 130, h: 46, name: "auth-db", role: "PostgreSQL", db: true },
+  "tracking-db": { x: 745, y: 316, w: 130, h: 46, name: "tracking-db", role: "PostgreSQL", db: true },
+  rabbitmq: { x: 60,  y: 414, w: 840, h: 46, name: "RabbitMQ", role: "hodisalar" },
+};
+const BADGE = { ok: "✓", degraded: "!", fail: "✕", unknown: "…" };
+const HEALTH_TEXT = { ok: "Ishlayapti", degraded: "Qisman", fail: "Ishlamayapti", unknown: "Tekshirilmoqda" };
+const HEALTH_TONE = { ok: "done", degraded: "ware", fail: "bad", unknown: "new" };
+const cx = (n) => NODES[n].x + NODES[n].w / 2;
+
+function archSvg(h) {
+  const node = (id) => { const n = NODES[id], s = h[id] || "unknown";
+    return `<g class="node${n.db ? " db" : ""}" data-health="${s}" ${id === "client" ? "" : `tabindex="0" data-tip="${esc(n.name)}: ${HEALTH_TEXT[s]}"`}>
+      <rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="14"/>
+      <text class="name" x="${n.x + 14}" y="${n.y + 22}">${esc(n.name)}</text><text class="role" x="${n.x + 14}" y="${n.y + 39}">${esc(n.role)}</text>
+      ${id === "client" ? "" : `<g class="badge"><circle cx="${n.x + n.w - 18}" cy="${n.y + n.h / 2}" r="9"/><text x="${n.x + n.w - 18}" y="${n.y + n.h / 2 + 4}" text-anchor="middle">${BADGE[s]}</text></g>`}</g>`; };
+  const svc = ["order", "courier", "auth", "tracking"];
+  const ev = (s, a, b) => `<line class="edge event" x1="${cx(s) + 76}" y1="262" x2="${cx(s) + 76}" y2="414" ${a ? 'marker-start="url(#ae)"' : ""} ${b ? 'marker-end="url(#ae)"' : ""}/>`;
+  return `<svg viewBox="0 0 960 486" role="img" aria-label="Gateway to‘rtta servisga yo‘naltiradi; har servisning o‘z bazasi bor; servislar RabbitMQ orqali hodisa almashadi">
+    <defs><marker id="as" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#8792A6"/></marker>
+    <marker id="ae" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#C08A2A"/></marker></defs>
+    <rect class="zone" x="36" y="186" width="888" height="292" rx="22"/>
+    <path class="edge sync" d="M480,60 V98" marker-end="url(#as)"/>
+    ${svc.map((s) => `<path class="edge sync" d="M480,152 V178 H${cx(s)} V206" marker-end="url(#as)"/>`).join("")}
+    ${svc.map((s) => `<line class="edge data" x1="${cx(s)}" y1="262" x2="${cx(s)}" y2="316"/>`).join("")}
+    <line class="edge sync" x1="240" y1="234" x2="280" y2="234" marker-start="url(#as)" marker-end="url(#as)"/>
+    <line class="edge sync" x1="460" y1="234" x2="500" y2="234" marker-end="url(#as)"/>
+    ${ev("order", false, true)}${ev("courier", true, true)}${ev("tracking", true, false)}
+    ${Object.keys(NODES).map(node).join("")}</svg>`;
+}
+
+async function probe(path) {
+  const t = performance.now();
+  try { const r = await fetch(path, { cache: "no-store" }); return { status: r.status, data: await r.json().catch(() => ({})), ms: Math.round(performance.now() - t) }; }
+  catch (_) { return { status: 0, data: {}, ms: null }; }
+}
+
+async function loadArch() {
+  const svc = ["auth", "order", "courier", "tracking"];
+  const [gw, ...res] = await Promise.all([probe("/health"), ...svc.map((s) => probe(`/health/${s}`))]);
+  const h = { gateway: gw.status === 200 ? "ok" : "fail" }, brokers = [];
+  svc.forEach((s, i) => { const r = res[i], c = r.data.checks || {};
+    h[s] = r.status === 200 ? (r.data.status === "ok" ? "ok" : "degraded") : "fail";
+    h[`${s}-db`] = c.database ? (c.database === "ok" ? "ok" : "fail") : (r.status === 503 ? "fail" : "unknown");
+    if (c.broker) brokers.push(c.broker); });
+  h.rabbitmq = !brokers.length ? "unknown" : brokers.includes("ok") ? (brokers.every((b) => b === "ok") ? "ok" : "degraded") : "fail";
+  $("arch-diagram").innerHTML = archSvg(h);
+  const rows = [["gateway", h.gateway, gw.ms], ...svc.map((s, i) => [`${s}-service`, h[s], res[i].ms]), ["RabbitMQ", h.rabbitmq, null]];
+  $("arch-list").innerHTML = rows.map(([name, s, ms]) => `<div class="row"><span class="row-main"><span class="row-title">${esc(name)}</span>${ms != null ? `<br><span class="row-sub num">${ms} ms</span>` : ""}</span>
+    <span class="chip" data-tone="${HEALTH_TONE[s]}">${HEALTH_TEXT[s]}</span></div>`).join("");
+  $("page-actions").innerHTML = `<span class="meta num">${new Date().toLocaleTimeString("uz-UZ")}</span>`;
+}
+
 render();
-if (!state.user) $("login-user").focus();
 </script>
 </body>
 </html>

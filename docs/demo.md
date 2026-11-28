@@ -26,16 +26,17 @@ so‘rovning status kodini ko‘rsatadi (tafsilot uchun qatorni oching). Dizayn 
 
 | # | Qadam | Nimani ko‘rsatadi |
 | --- | --- | --- |
-| 1 | Noto‘g‘ri parol bilan kirishga urinib ko‘ring | `401`, «Login yoki parol noto‘g‘ri» |
-| 2 | `admin` / `admin_dev_password` bilan kiring → **Foydalanuvchilar** tabi → **Namoyish foydalanuvchilarini yaratish** | auth-service JWT beradi; `op1`, `ali`, `vali` yaratiladi (parol `demo-parol-1`) |
-| 3 | **Chiqish** → kirish sahifasida **op1 · operator** → **Kirish** → manzil kiriting → **Buyurtma yaratish** | order-service, `201`; marshrut va sariq kod yorlig‘i paydo bo‘ladi |
-| 4 | **Omborga qabul qilish** → **Yo‘lga chiqarish** | `409` — «Avval buyurtmaga kuryer biriktiring» (biznes qoidasi) |
-| 5 | Kuryer logini `ali` → **Kuryer biriktirish** → **Yo‘lga chiqarish** | courier-service order-service’dan holatni, auth-service’dan kuryerni so‘raydi |
-| 6 | **Chiqish** → **vali · kuryer** | «Sizga hali buyurtma biriktirilmagan» — boshqa kuryerning buyurtmasi ko‘rinmaydi |
-| 7 | **Chiqish** → **ali · kuryer** → **Topshirildi deb belgilash** | Kuryer faqat O‘Z buyurtmasini topshiradi, `200` |
-| 8 | O‘ngda **Buyurtmani kuzatish** (kod avtomatik qo‘yilgan) → **Kuzatish** | tracking-service, tokensiz; hodisalardan qurilgan, manzil va kuryer nomi yo‘q |
-| 9 | **Chiqish** → op1 bilan kiring → **Dashboard** | Holatlar, 24 soatlik oqim, bosqichlar vaqti, kuryerlar yuklamasi — har servis o‘z bazasidan hisoblaydi |
-| 10 | **Arxitektura** tabi; terminalda `docker compose stop rabbitmq` | 5 soniyada RabbitMQ qizil, servislar «qisman»; buyurtma yaratish baribir ishlaydi (outbox). `docker compose start rabbitmq` — yana yashil |
+| 1 | Noto‘g‘ri parol bilan kiring | `401`, «Login yoki parol noto‘g‘ri» |
+| 2 | **admin** / `admin_dev_password` → **Foydalanuvchilar** → **Namoyish hisoblarini qo‘shish** | `op1`, `ali`, `vali` yaratiladi (parol `demo-parol-1`) |
+| 3 | Chiqish → **op1** tugmasi → **Buyurtmalar** → manzil → **Yaratish** | Marshrut kartasi, `201` |
+| 4 | **Omborga qabul qilish** → **Yo‘lga chiqarish** | Toast: «Avval buyurtmaga kuryer biriktiring» (`409`) |
+| 5 | Kuryer `ali` → **Biriktirish** → **Yo‘lga chiqarish** | courier-service order va auth servislaridan so‘raydi |
+| 6 | Chiqish → **vali** → **Yetkazmalarim** | «Hozircha yetkazma yo‘q» — boshqa kuryer buyurtmasi ko‘rinmaydi |
+| 7 | Chiqish → **ali** → **Topshirildi** | Kuryer faqat o‘z buyurtmasini topshiradi |
+| 8 | **Kuzatish** → kod | Tokensiz; manzil va kuryer ismi yo‘q |
+| 9 | op1 → **Dashboard** | Ko‘rsatkichlar va 4 grafik |
+| 10 | **Arxitektura**; terminalda `docker compose stop rabbitmq` | RabbitMQ qizil, buyurtma yaratish baribir ishlaydi. `start` — yana yashil |
+| 11 | **Jurnal** | Barcha so‘rovlar va status kodlari |
 
 Terminalda qo‘shimcha ko‘rsatish mumkin:
 
