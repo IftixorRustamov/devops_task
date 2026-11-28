@@ -61,3 +61,35 @@ yuborishdan ko‘ra kutgan afzal.
 **Orqaga moslik.** Tashqi API yo‘llari o‘zgarmadi (gateway `:8000`), faqat
 `GET /api/v1/tracking/{code}` va `/health/<servis>` qo‘shildi. Eski CLI (`app.py`) olib
 tashlandi — u bazaga to‘g‘ridan-to‘g‘ri yozardi, bu esa database-per-service qoidasini buzadi.
+
+## 2026-11-28. JWT autentifikatsiya va rollar
+
+Yangi `auth-service` o‘z bazasi (`auth-db`) bilan: foydalanuvchilar, rollar (`admin`, `operator`,
+`courier`), parollar PBKDF2-HMAC-SHA256 (310 000 iteratsiya), access token — HS256 JWT
+(15 daqiqa), refresh token — tasodifiy, bazada faqat SHA-256 xeshi, bir martalik (rotatsiya).
+Ishlatilgan refresh token qayta kelsa — u o‘g‘irlangan deb hisoblanadi va foydalanuvchining barcha
+sessiyalari bekor qilinadi.
+
+**Token qayerda tekshiriladi: gateway’da (`auth_request`).** nginx har bir so‘rovni
+`auth-service /internal/verify` da tekshiradi va servisga `X-User` / `X-User-Role` beradi.
+Standart holatda hamma yo‘l himoyalangan, ommaviylari (`login`, `tracking`, `health`) aniq
+yozilgan. Muqobil — har bir servis JWT’ni o‘zi tekshirishi: unda HS256 kaliti hamma servisda
+bo‘lardi (istalgan servis token yarata olardi) yoki RS256 uchun tashqi kriptografiya kutubxonasi
+kerak edi. Tanlangan yo‘lda kalit faqat auth-service’da, servislar kodi oddiy qoladi.
+Narxi: har so‘rovga bitta ichki so‘rov qo‘shiladi (millisekundlar). Servislar `backend` yopiq
+tarmog‘ida bo‘lgani uchun `X-User` sarlavhasini faqat gateway qo‘ya oladi.
+
+**Rollarni servis tekshiradi.** Qoida biznes mantiq yonida: masalan, kuryer faqat O‘ZIGA
+biriktirilgan buyurtmani topshira oladi (order-service courier-service’dan so‘raydi), kuryer
+logini auth-service’da mavjud va faol bo‘lishi kerak (courier-service auth-service’dan so‘raydi).
+
+**Kelishuv.** Access token muddati tugaguncha (15 daqiqa) bloklangan foydalanuvchi tokeni ishlaydi;
+refresh esa darhol bekor qilinadi. Tezroq bekor qilish kerak bo‘lsa — verify’da foydalanuvchi
+holatini tekshirish yoki muddatni qisqartirish.
+
+## 2026-11-28. Namoyish: GitHub Codespaces
+
+Jamoada hammada Docker yo‘q. `.devcontainer/` Codespaces’da docker-in-docker bilan butun stack’ni
+ko‘taradi; 8000 port ommaviy havola beradi. VPS bilan solishtirganda: tekin, sozlash yo‘q, lekin
+doimiy ishlamaydi (harakatsizlikda to‘xtaydi) — o‘quv namoyishi uchun yetarli. Brauzer orqali
+ko‘rsatish uchun gateway `/` da statik demo sahifa beradi (tashqi kutubxonasiz).

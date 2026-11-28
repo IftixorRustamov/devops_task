@@ -1,0 +1,25 @@
+{
+  // GitHub Codespaces: brauzerda to‘liq Docker muhiti. Kompyuteringizda Docker shart emas.
+  // Ochilgach butun stack avtomatik ko‘tariladi (8000 port = gateway).
+  "name": "Crystal Logistics",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb"
+  },
+  "forwardPorts": [8000, 15672],
+  "portsAttributes": {
+    "8000": {"label": "Crystal API (gateway)", "onAutoForward": "notify"},
+    "15672": {"label": "RabbitMQ panel", "onAutoForward": "silent"}
+  },
+  "postCreateCommand": "cp -n .env.example .env || true",
+  "postStartCommand": "bash .devcontainer/start.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-azuretools.vscode-docker", "humao.rest-client"]
+    }
+  }
+}

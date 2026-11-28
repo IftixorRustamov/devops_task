@@ -20,7 +20,8 @@ def register_health(app, db, bus, relay=None, extra=None):
         except Exception as error:
             log.warning("Baza tekshiruvi muvaffaqiyatsiz: %s", error)
             checks["database"] = "fail"
-        checks["broker"] = "ok" if bus.healthy() else "fail"
+        if bus is not None:
+            checks["broker"] = "ok" if bus.healthy() else "fail"
         if relay is not None:
             checks["outbox_relay"] = "ok" if relay.is_alive() else "fail"
         if extra:

@@ -8,7 +8,7 @@ import os
 import runpy
 import sys
 
-ALLOWED = {"order", "courier", "tracking"}
+ALLOWED = {"auth", "order", "courier", "tracking"}
 
 
 def main():

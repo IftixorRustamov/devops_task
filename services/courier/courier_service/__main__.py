@@ -8,7 +8,7 @@ from crystal_common.runtime import serve
 
 from .api import build_app
 from .schema import SCHEMA
-from .service import CourierService, OrderClient
+from .service import AuthClient, CourierService, OrderClient
 
 QUEUE = "courier-service.events"
 BINDINGS = ("order.status_changed",)
@@ -25,7 +25,10 @@ def main():
     orders = OrderClient(ServiceClient(
         env("CRYSTAL_ORDER_SERVICE_URL", "http://localhost:8001"), "order-service", settings.http_timeout,
     ))
-    service = CourierService(db, orders)
+    auth = AuthClient(ServiceClient(
+        env("CRYSTAL_AUTH_SERVICE_URL", "http://localhost:8004"), "auth-service", settings.http_timeout,
+    ))
+    service = CourierService(db, orders, auth)
     bus.subscribe(QUEUE, BINDINGS, service.on_event)
     serve(build_app(service, db, bus, relay), settings, background=[bus, relay])
 

@@ -5,7 +5,7 @@ from courier_service.schema import SCHEMA as COURIER_SCHEMA
 from courier_service.service import CourierService
 from crystal_common.errors import ConflictError, NotFoundError, ValidationError
 from crystal_common.events import new_event
-from helpers import FakeOrderClient, TempDatabases, clock
+from helpers import FakeAuthClient, FakeOrderClient, TempDatabases, clock
 from tracking_service.schema import SCHEMA as TRACKING_SCHEMA
 from tracking_service.service import TrackingService
 
@@ -15,29 +15,37 @@ class CourierServiceTest(unittest.TestCase):
         self.dbs = TempDatabases()
         self.addCleanup(self.dbs.cleanup)
         self.orders = FakeOrderClient()
-        self.service = CourierService(self.dbs.create("courier", COURIER_SCHEMA), self.orders, clock=clock)
+        self.service = CourierService(
+            self.dbs.create("courier", COURIER_SCHEMA), self.orders, FakeAuthClient(), clock=clock
+        )
 
     def test_assign_only_in_warehouse_and_only_once(self):
         self.orders.orders["CRY-1"] = "Yangi"
         with self.assertRaises(ConflictError):
-            self.service.assign("CRY-1", "Ali")
+            self.service.assign("CRY-1", "ali")
         self.orders.orders["CRY-1"] = "Omborda"
         self.assertEqual(self.service.assign("cry-1", " Ali "), {"code": "CRY-1", "assigned": True})
         with self.assertRaises(ConflictError):
-            self.service.assign("CRY-1", "Vali")
-        self.assertEqual(self.service.get_assignment("CRY-1")["courier"], "Ali")
+            self.service.assign("CRY-1", "vali")
+        self.assertEqual(self.service.get_assignment("CRY-1")["courier"], "ali")
+        self.assertEqual([a["code"] for a in self.service.list_for_courier("ali")], ["CRY-1"])
+
+    def test_courier_must_be_known_active_courier(self):
+        self.orders.orders["CRY-1"] = "Omborda"
+        with self.assertRaises(ValidationError):
+            self.service.assign("CRY-1", "begona")
 
     def test_validation_and_not_found(self):
         with self.assertRaises(ValidationError):
             self.service.assign("CRY-1", "  ")
         with self.assertRaises(NotFoundError):
-            self.service.assign("CRY-404", "Ali")
+            self.service.assign("CRY-404", "ali")
         with self.assertRaises(NotFoundError):
             self.service.get_assignment("CRY-404")
 
     def test_delivered_event_sets_delivered_at(self):
         self.orders.orders["CRY-1"] = "Omborda"
-        self.service.assign("CRY-1", "Ali")
+        self.service.assign("CRY-1", "ali")
         event = new_event("order.status_changed", {"code": "CRY-1", "status": "Yetkazildi", "seq": 4}, "t")
         self.service.on_event(event)
         self.service.on_event(event)  # takror — xatosiz e’tiborsiz qoldiriladi

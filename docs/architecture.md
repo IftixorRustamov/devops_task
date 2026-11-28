@@ -1,6 +1,6 @@
 # Arxitektura
 
-Crystal Logistics — uchta mustaqil mikroservis. Har bir servisning **o‘z bazasi**,
+Crystal Logistics — to‘rtta mustaqil mikroservis. Har bir servisning **o‘z bazasi**,
 o‘z obrazi va o‘z yopiq tarmog‘i bor. Servislar bir-biri bilan faqat ikki yo‘l bilan
 gaplashadi: **HTTP** (javob darhol kerak bo‘lsa) va **RabbitMQ hodisalari** (qolgan hamma narsa).
 
@@ -8,7 +8,11 @@ gaplashadi: **HTTP** (javob darhol kerak bo‘lsa) va **RabbitMQ hodisalari** (q
 
 ```mermaid
 flowchart LR
-    client[Mijoz / curl] -->|HTTP :8000| gw[gateway<br/>nginx]
+    client[Mijoz / brauzer] -->|HTTP :8000| gw[gateway<br/>nginx + auth_request]
+    gw -->|/internal/verify<br/>har so‘rovda| auth[auth-service]
+    gw -->|/api/v1/auth/*| auth
+    auth --- adb[(auth-db<br/>PostgreSQL)]
+    courier -- "GET /internal/users" --> auth
     gw -->|/api/v1/orders/*| order[order-service]
     gw -->|/api/v1/orders/*/assign| courier[courier-service]
     gw -->|/api/v1/tracking/*| tracking[tracking-service]
@@ -30,10 +34,11 @@ flowchart LR
 
 | Servis | Mas’uliyat | O‘z bazasidagi jadvallar | Chiqaradi | Tinglaydi | Sinxron chaqiradi |
 | --- | --- | --- | --- | --- | --- |
+| `auth-service` | Foydalanuvchilar, rollar, JWT, refresh tokenlar | `users`, `refresh_tokens` | — | — | hech kim |
 | `order-service` | Omborlar, buyurtma, holat mashinasi | `warehouses`, `orders`, `order_events`, `outbox` | `order.created`, `order.status_changed` | — | courier-service (dispatch oldidan) |
 | `courier-service` | Kuryer biriktirish, topshirilgan vaqt | `assignments`, `outbox`, `processed_events` | `courier.assigned` | `order.status_changed` | order-service (assign oldidan) |
 | `tracking-service` | Ommaviy kuzatuv (read model) | `shipments`, `timeline`, `processed_events` | — | `order.*`, `courier.assigned` | hech kim |
-| `gateway` | Yagona kirish, marshrutlash, rate limit, `X-Request-ID` | — | — | — | — |
+| `gateway` | Yagona kirish, token tekshiruvi, marshrutlash, rate limit, `X-Request-ID`, demo sahifa | — | — | — | auth-service (har so‘rovda) |
 
 Servis ichidagi qatlamlar avvalgidek: `api.py` (HTTP) → `service.py` (biznes qoida) →
 `crystal_common.db` (SQL). Umumiy kod (`services/common/crystal_common`) biznes qoidalarini
@@ -41,7 +46,7 @@ bilmaydi — faqat infratuzilma: baza adapteri, HTTP karkas, shina, outbox/inbox
 
 ## Database-per-service
 
-- Uchta alohida PostgreSQL serveri (`order-db`, `courier-db`, `tracking-db`), har birida alohida
+- To‘rtta alohida PostgreSQL serveri (`auth-db`, `order-db`, `courier-db`, `tracking-db`), har birida alohida
   foydalanuvchi, parol va volume.
 - Har bir baza `internal` tarmoqda va unga **faqat o‘z servisi** ulangan. `courier-service`
   `order-db` nomini DNS’da ham topa olmaydi — buni `scripts/resilience_test.sh` CI’da tekshiradi.
@@ -49,6 +54,44 @@ bilmaydi — faqat infratuzilma: baza adapteri, HTTP karkas, shina, outbox/inbox
   hodisalari orqali olinadi. Shu sababli bitta servis sxemasini o‘zgartirish boshqalarni buzmaydi.
 - `tracking-service` o‘ziga kerakli ma’lumotni hodisalardan o‘z bazasiga ko‘chirib oladi (CQRS
   read model). order-service ishlamay qolsa ham kuzatuv ishlayveradi.
+
+## Autentifikatsiya va avtorizatsiya
+
+```mermaid
+sequenceDiagram
+    participant C as Mijoz
+    participant G as gateway
+    participant A as auth-service
+    participant O as order-service
+    C->>G: POST /api/v1/auth/login {username, password}
+    G->>A: (ommaviy yo‘l, login rate limit)
+    A-->>C: access_token (JWT, 15 daq) + refresh_token
+    C->>G: POST /api/v1/orders  Authorization: Bearer <JWT>
+    G->>A: auth_request → GET /internal/verify
+    A-->>G: 200 + X-User: op1, X-User-Role: operator
+    G->>O: so‘rov + X-User, X-User-Role (mijoz yuborgani ustidan yoziladi)
+    O->>O: require_role(admin, operator)
+    O-->>C: 201
+```
+
+- **Secure by default:** gateway’da `auth_request` server darajasida yoqilgan; ommaviy yo‘llar
+  (`/`, `/health*`, `login/refresh/logout`, `/api/v1/tracking/*`) aniq ro‘yxatda.
+- **Kalit bitta joyda:** HS256 imzo kaliti faqat auth-service’da. Tekshiruvda `alg`, imzo
+  (`hmac.compare_digest`), `iss`, `exp`, `nbf`, rol tekshiriladi; `alg: none` rad etiladi.
+- **Soxtalashtirib bo‘lmaydi:** `X-User*` sarlavhalarini gateway har doim o‘zi qo‘yadi; servislar
+  yopiq `backend` tarmog‘ida, unga tashqaridan kirish yo‘q.
+- **Parollar:** PBKDF2-HMAC-SHA256, 310 000 iteratsiya, har biriga tasodifiy tuz. Login yo‘q
+  bo‘lsa ham xesh hisoblanadi — javob vaqti login borligini oshkor qilmaydi.
+- **Refresh token:** tasodifiy 256 bit, bazada faqat SHA-256 xeshi, har ishlatilganda
+  almashtiriladi. Eski token qayta kelsa — barcha sessiyalar bekor qilinadi.
+- **Rollar servisda:** `require_role()` har bir endpointda. Murakkab qoida biznes mantiqda:
+  kuryer faqat o‘ziga biriktirilgan buyurtmani topshiradi.
+
+| Rol | Ruxsatlar |
+| --- | --- |
+| `admin` | hammasi, foydalanuvchilarni boshqarish |
+| `operator` | buyurtma yaratish, qabul, biriktirish, yo‘lga chiqarish, topshirish |
+| `courier` | o‘z buyurtmalari, o‘ziga biriktirilganini topshirish, holatni ko‘rish |
 
 ## Hodisalar (RabbitMQ)
 
@@ -200,7 +243,9 @@ stateDiagram-v2
 
 ## Cheklovlar va keyingi qadamlar
 
-- Autentifikatsiya yo‘q. Keyingi qadam: gateway’da JWT tekshiruvi, rollar (operator, kuryer).
+- Access token bekor qilinmaydi (15 daqiqa amal qiladi); bloklash refresh’ni darhol to‘xtatadi.
+- Gateway har so‘rovda auth-service’ga murojaat qiladi — yuqori yuklamada `proxy_cache` bilan
+  verify natijasini qisqa muddat keshlash mumkin.
 - Sxema ishga tushishda `CREATE TABLE IF NOT EXISTS` bilan yaratiladi. Sxema o‘zgarishlari
   ko‘paysa — har bir servis uchun alohida migratsiya vositasi (Alembic yoki Flyway).
 - Metrikalar (Prometheus) va distributed tracing (OpenTelemetry) qo‘shilmagan.

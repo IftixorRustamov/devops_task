@@ -1,0 +1,58 @@
+# O‘qituvchiga namoyish (GitHub Codespaces)
+
+Kompyuteringizda Docker shart emas — hammasi GitHub serverida, brauzerda ishlaydi.
+
+## 1. Codespace ochish (bir marta, ~5 daqiqa)
+
+1. GitHub’da repozitoriyni oching → yashil **Code** tugmasi → **Codespaces** → **Create codespace on main**.
+2. Brauzerda VS Code ochiladi. Pastdagi terminalda avtomatik ishga tushadi:
+   `Crystal Logistics ishga tushirilmoqda…` — birinchi marta 3–5 daqiqa (obrazlar yig‘iladi).
+3. Oxirida chiqadi: `Tayyor! Namoyish sahifasi: https://<nom>-8000.app.github.dev`
+
+Havola o‘qituvchida ochilmasa: pastdagi **PORTS** oynasi → `8000` qatori → o‘ng tugma →
+**Port Visibility → Public**.
+
+> Codespace 30 daqiqa harakatsiz tursa to‘xtaydi (GitHub tekin limitini tejaydi). Namoyishdan oldin
+> github.com/codespaces sahifasidan uni qayta **Open** qiling — stack o‘zi qayta ko‘tariladi
+> (ma’lumotlar saqlanadi). Ishlatib bo‘lgach **Stop codespace** qiling.
+
+Terminalda tekshirish: `./scripts/smoke_test.sh` — 50 dan ortiq tekshiruv, oxirida
+`Smoke test muvaffaqiyatli`.
+
+## 2. Namoyish ssenariysi (5–7 daqiqa)
+
+Havolani oching — **Crystal Logistics** demo sahifasi. Pastdagi **So‘rovlar jurnali** har bir
+so‘rovning status kodini va javobini ko‘rsatadi.
+
+| # | Qadam | Nimani ko‘rsatadi |
+| --- | --- | --- |
+| 1 | `admin` / `admin_dev_password` bilan kiring | auth-service JWT beradi (jurnalda `200`, token qisqartirilgan) |
+| 2 | Admin: `op1` (operator), `ali` va `vali` (courier) yarating | Rollar, parollar PBKDF2 bilan xeshlanadi |
+| 3 | **Chiqish** → `op1` bilan kiring → buyurtma yarating | order-service, `201`, `CRY-…` kodi |
+| 4 | **Yo‘lga chiqarish** ni bosing | `409` — kuryer biriktirilmagan (biznes qoidasi) |
+| 5 | **Omborga qabul** → kuryer `ali` → **Kuryer biriktirish** → **Yo‘lga chiqarish** | courier-service order-service’dan holatni so‘raydi (servislararo HTTP) |
+| 6 | **Chiqish** → `vali` bilan kiring → kodni kiriting… | `vali`ga «Mening buyurtmalarim» bo‘sh; order-service’da topshirish `403` |
+| 7 | **Chiqish** → `ali` bilan kiring → **Yangilash** → **Topshirish** | Kuryer faqat O‘Z buyurtmasini topshiradi, `200` |
+| 8 | **Ommaviy kuzatuv**: kodni kiriting → **Kuzatish** | tracking-service, tokensiz; hodisalardan qurilgan, manzil va kuryer nomi yo‘q |
+
+Terminalda qo‘shimcha ko‘rsatish mumkin:
+
+```sh
+docker compose ps                                   # 10 ta konteyner, hammasi healthy
+docker compose logs --no-log-prefix order-service | tail -5   # JSON loglar, request_id
+curl -s localhost:8000/api/v1/orders -X POST -d '{}' # 401 — token yo‘q
+./scripts/resilience_test.sh                        # bazalar izolyatsiyasi, broker o‘chishi, restart
+```
+
+RabbitMQ paneli: PORTS → `15672` → globus belgisi (login `crystal` / `crystal_dev_password`) —
+`crystal.events` exchange va servis navbatlari.
+
+## 3. Savol bo‘lsa — qisqa javoblar
+
+- **Nega 4 ta baza?** Database-per-service: har bir servis o‘z ma’lumotining egasi, boshqa servis
+  unga tarmoqda ham ulana olmaydi (`resilience_test.sh` 12 juftlikni tekshiradi).
+- **Token qayerda tekshiriladi?** Gateway (nginx `auth_request`) har so‘rovni auth-service’da
+  tekshiradi; servislar faqat rolni ko‘radi. Imzo kaliti faqat auth-service’da.
+- **Broker o‘chsa?** Buyurtmalar yaratilaveradi (outbox), hodisalar broker qaytganda yetib boradi.
+- **Token o‘g‘irlansa?** Access token 15 daqiqa yashaydi; refresh token bir martalik — qayta
+  ishlatilsa foydalanuvchining barcha sessiyalari bekor qilinadi.

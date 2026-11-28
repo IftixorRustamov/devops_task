@@ -9,3 +9,4 @@ __pycache__/
 *.sqlite3-wal
 *.sqlite3-journal
 .DS_Store
+.devcontainer/url.txt

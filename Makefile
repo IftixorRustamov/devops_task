@@ -1,5 +1,5 @@
 PORT ?= 8000
-SERVICES = order courier tracking
+SERVICES = auth order courier tracking
 
 .PHONY: help test docker-test up down logs ps smoke resilience clean config $(addprefix run-,$(SERVICES))
 

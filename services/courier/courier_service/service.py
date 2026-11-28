@@ -1,6 +1,8 @@
 """Kuryer biriktirish qoidalari."""
 
-from crystal_common.errors import ConflictError, NotFoundError, UpstreamError, normalize_code, require_text
+from crystal_common.errors import (
+    ConflictError, NotFoundError, UpstreamError, ValidationError, normalize_code, require_text,
+)
 from crystal_common.events import handle_once, new_event, record_event, utc_now
 
 SOURCE = "courier-service"
@@ -24,15 +26,33 @@ class OrderClient:
         raise UpstreamError("order-service kutilmagan javob qaytardi.")
 
 
+class AuthClient:
+    """auth-service: kuryer logini mavjud, faol va roli `courier` ekanini tekshirish."""
+
+    def __init__(self, client):
+        self.client = client
+
+    def is_active_courier(self, username):
+        status, payload = self.client.get(f"/internal/users/{username}")
+        if status == 200:
+            return payload.get("role") == "courier" and payload.get("active") is True
+        if status == 404:
+            return False
+        raise UpstreamError("auth-service kutilmagan javob qaytardi.")
+
+
 class CourierService:
-    def __init__(self, db, orders, clock=utc_now):
+    def __init__(self, db, orders, auth, clock=utc_now):
         self.db = db
         self.orders = orders
+        self.auth = auth
         self.clock = clock
 
     def assign(self, code, courier):
         code = normalize_code(code)
-        courier = require_text(courier, "Kuryer nomi bo‘sh bo‘lmasligi kerak.")
+        courier = require_text(courier, "Kuryer logini bo‘sh bo‘lmasligi kerak.", max_length=32).lower()
+        if not self.auth.is_active_courier(courier):
+            raise ValidationError("Bunday faol kuryer yo‘q (login va `courier` rolini tekshiring).")
         order = self.orders.get_order(code)
         if order["status"] != IN_WAREHOUSE:
             raise ConflictError("Buyurtma omborga qabul qilingach kuryerga biriktiriladi.")
@@ -56,6 +76,15 @@ class CourierService:
         if row is None:
             raise NotFoundError("Biriktirish topilmadi.")
         return {"code": code, "courier": row[0], "assigned_at": row[1], "delivered_at": row[2]}
+
+    def list_for_courier(self, courier):
+        with self.db.session() as session:
+            rows = session.all(
+                "SELECT order_code, assigned_at, delivered_at FROM assignments WHERE courier = ? "
+                "ORDER BY assigned_at DESC LIMIT 100",
+                (courier,),
+            )
+        return [{"code": c, "assigned_at": a, "delivered_at": d} for c, a, d in rows]
 
     # --- hodisalar ------------------------------------------------------------
     def on_event(self, event):

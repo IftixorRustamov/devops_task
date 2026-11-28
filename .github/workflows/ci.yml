@@ -32,7 +32,7 @@ jobs:
         run: python -m unittest discover -s tests -v
 
   stack:
-    name: To‘liq stack (PostgreSQL x3 + RabbitMQ + gateway)
+    name: To‘liq stack (PostgreSQL x4 + RabbitMQ + gateway)
     needs: test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -58,3 +58,22 @@ jobs:
       - name: Tozalash
         if: always()
         run: docker compose down --volumes
+
+  codespace:
+    name: Codespaces muhiti (devcontainer)
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Devcontainer’ni ko‘tarish va ichida stack + smoke test
+        uses: devcontainers/ci@v0.3
+        with:
+          push: never
+          runCmd: |
+            set -e
+            for i in $(seq 1 60); do curl -fsS http://localhost:8000/health/order >/dev/null 2>&1 && break; sleep 5; done
+            docker compose ps
+            ./scripts/smoke_test.sh http://localhost:8000

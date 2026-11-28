@@ -78,16 +78,20 @@ class App:
         raise ApiError(HTTPStatus.NOT_FOUND, "Manzil topilmadi.")
 
     def handle(self, request):
+        """`(status, payload, headers)` qaytaradi. Handler 2 yoki 3 elementli tuple qaytarishi mumkin."""
         try:
             function, params = self.resolve(request.method, request.path)
-            return function(request, **params)
+            result = function(request, **params)
         except ApiError as error:
-            return error.status, {"error": str(error)}
+            result = error.status, {"error": str(error)}
         except DomainError as error:
-            return error.status, {"error": str(error)}
+            result = error.status, {"error": str(error)}
         except Exception:
             log.exception("Kutilmagan xato: %s %s", request.method, request.path)
-            return HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "Ichki server xatosi."}
+            result = HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "Ichki server xatosi."}
+        if len(result) == 2:
+            return result[0], result[1], {}
+        return result
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -122,18 +126,20 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?", 1)[0]
         try:
             request = Request(method, path, self.headers, self._read_body())
-            status, payload = self.server.app.handle(request)
+            status, payload, headers = self.server.app.handle(request)
         except ApiError as error:
-            status, payload = error.status, {"error": str(error)}
+            status, payload, headers = error.status, {"error": str(error)}, {}
             self.close_connection = True
-        self._send_json(status, payload)
+        self._send_json(status, payload, headers)
         level = logging.DEBUG if path == "/health" else logging.INFO
         log.log(level, "%s %s %d %.1fms", method, path, status, (time.perf_counter() - started) * 1000)
         set_request_id(None)
 
-    def _send_json(self, status, payload):
+    def _send_json(self, status, payload, headers=None):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
+        for name, value in (headers or {}).items():
+            self.send_header(name, value)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Content-Type-Options", "nosniff")
