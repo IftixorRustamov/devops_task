@@ -32,7 +32,7 @@ jobs:
         run: python -m unittest discover -s tests -v
 
   stack:
-    name: To‘liq stack (PostgreSQL x3 + RabbitMQ + gateway)
+    name: To‘liq stack (PostgreSQL x4 + RabbitMQ + gateway)
     needs: test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
