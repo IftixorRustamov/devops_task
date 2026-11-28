@@ -89,9 +89,9 @@ call GET "/api/v1/orders/$CODE" "" 403                               # boshqa ku
 call POST "/api/v1/orders/$CODE/deliver" "" 403                      # unga biriktirilmagan
 login "$COURIER" smoke-parol-1
 call GET /api/v1/couriers/me/assignments "" 200
-call GET "/api/v1/orders/$CODE" "" 200                               # o‘z buyurtmasi: manzil va telefon
-printf '%s' "$BODY" | json 'd["recipient_phone"]' | grep -qx '+998901234567' 
 printf '%s' "$BODY" | json '[i["code"] for i in d["items"]]' | grep -q "$CODE"
+call GET "/api/v1/orders/$CODE" "" 200                               # o‘z buyurtmasi: manzil va telefon
+printf '%s' "$BODY" | json 'd["recipient_phone"]' | grep -qx '+998901234567'
 call POST "/api/v1/orders/$CODE/deliver" "" 200
 call POST "/api/v1/orders/$CODE/deliver" "" 409
 call GET "/api/v1/orders/$CODE" "" 200
