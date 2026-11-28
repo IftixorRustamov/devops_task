@@ -50,7 +50,7 @@ call POST /api/v1/orders '{"address": "x"}' 401                     # token yo�
 EXTRA_HEADERS=(-H 'X-User: admin' -H 'X-User-Role: admin')
 call POST /api/v1/orders '{"address": "x"}' 401                     # soxta sarlavha yordam bermaydi
 EXTRA_HEADERS=()
-TOKEN="buzilgan.token.qiymat"; call GET /api/v1/auth/me "" 401; TOKEN=""
+TOKEN="buzilgan.token.qiymat"; WHO="buzilgan token"; call GET /api/v1/auth/me "" 401; TOKEN=""
 call POST /api/v1/auth/login '{"username":"admin","password":"noto‘g‘ri-parol"}' 401
 
 login "$ADMIN_USER" "$ADMIN_PASS"

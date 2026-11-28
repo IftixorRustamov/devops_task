@@ -7,16 +7,18 @@
 | Docker Engine | 24+ |
 | Docker Compose | v2.24+ |
 | Python (testlar va Docker’siz ishlatish) | 3.9+ |
-| Bo‘sh RAM | ~1.5 GB (3 PostgreSQL + RabbitMQ + 3 servis + nginx) |
+| Bo‘sh RAM | ~2 GB (4 PostgreSQL + RabbitMQ + 4 servis + nginx) |
 
 ## Konteynerlar
 
 | Konteyner | Obraz | Tarmoqlar | Volume | Hostga ochiq port |
 | --- | --- | --- | --- | --- |
 | `gateway` | `nginxinc/nginx-unprivileged:1.27-alpine` | edge, backend | — | `${CRYSTAL_PUBLISH_PORT:-8000}` |
+| `auth-service` | `crystal-auth-service:local` | backend, auth-data | — | — |
 | `order-service` | `crystal-order-service:local` | backend, events, order-data | — | — |
 | `courier-service` | `crystal-courier-service:local` | backend, events, courier-data | — | — |
 | `tracking-service` | `crystal-tracking-service:local` | backend, events, tracking-data | — | — |
+| `auth-db` | `postgres:16-alpine` | auth-data | `auth-db-data` | — |
 | `order-db` | `postgres:16-alpine` | order-data | `order-db-data` | — |
 | `courier-db` | `postgres:16-alpine` | courier-data | `courier-db-data` | — |
 | `tracking-db` | `postgres:16-alpine` | tracking-data | `tracking-db-data` | — |
@@ -30,7 +32,7 @@ servislar → gateway. Servis o‘zi ham bazani 60 s gacha kutadi (`CRYSTAL_STAR
 
 ## Dockerfile
 
-Bitta Dockerfile uchta servis obrazini yig‘adi; servisni `SERVICE` build argumenti tanlaydi.
+Bitta Dockerfile to‘rtta servis obrazini yig‘adi; servisni `SERVICE` build argumenti tanlaydi.
 
 | Bosqich | Vazifa |
 | --- | --- |
@@ -77,18 +79,37 @@ Servislar (compose ularni o‘zi beradi):
 | `CRYSTAL_OUTBOX_INTERVAL_MS` | `500` | Outbox tekshirish oralig‘i |
 | `CRYSTAL_STARTUP_TIMEOUT_S` | `60` | Bazani kutish |
 
+auth-service:
+
+| O‘zgaruvchi | Standart | Izoh |
+| --- | --- | --- |
+| `CRYSTAL_JWT_SECRET` | (compose’da dev qiymat) | Imzo kaliti, ≥ 32 belgi. Faqat auth-service oladi. `openssl rand -base64 48` |
+| `CRYSTAL_ADMIN_USERNAME` / `CRYSTAL_ADMIN_PASSWORD` | `admin` / `admin_dev_password` | Birinchi ishga tushishda yaratiladi; keyin o‘zgartirilmaydi |
+| `CRYSTAL_ACCESS_TOKEN_TTL_S` | `900` | Access token muddati |
+| `CRYSTAL_REFRESH_TOKEN_TTL_S` | `604800` | Refresh token muddati (7 kun) |
+| `CRYSTAL_AUTH_SERVICE_URL` | `http://localhost:8004` | courier-service uchun (kuryer loginini tekshirish) |
+
 `.env` (faqat compose o‘qiydi, servislarga to‘g‘ridan-to‘g‘ri berilmaydi):
-`CRYSTAL_PUBLISH_PORT`, `CRYSTAL_LOG_LEVEL`, `ORDER_DB_PASSWORD`, `COURIER_DB_PASSWORD`,
-`TRACKING_DB_PASSWORD`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`, `RABBITMQ_UI_PORT`.
+`CRYSTAL_PUBLISH_PORT`, `CRYSTAL_LOG_LEVEL`, `AUTH_DB_PASSWORD`, `ORDER_DB_PASSWORD`,
+`COURIER_DB_PASSWORD`, `TRACKING_DB_PASSWORD`, `CRYSTAL_JWT_SECRET`, `CRYSTAL_ADMIN_*`,
+`RABBITMQ_USER`, `RABBITMQ_PASSWORD`, `RABBITMQ_UI_PORT`.
 Har bir servis konteyneriga faqat **o‘z bazasining** paroli tushadi.
 
 > `.env.example`dagi parollar faqat lokal uchun. Serverda hammasini almashtiring.
 > Parollarda faqat harf, raqam va `_` ishlating — ular URL ichiga qo‘yiladi.
 
+## GitHub Codespaces (Docker o‘rnatmasdan)
+
+`.devcontainer/` brauzerdagi to‘liq Docker muhitini sozlaydi: Codespace ochilganda
+`.devcontainer/start.sh` `.env`ni yaratadi, stack’ni ko‘taradi, 8000 portni ommaviy qilishga
+urinadi va havolani chiqaradi. CI’ning `codespace` job’i aynan shu devcontainer’ni yig‘ib, ichida
+smoke testni ishlatadi. Namoyish qadamlari: [demo.md](demo.md).
+
 ## Docker’siz (lokal ishlab chiqish)
 
 ```sh
-make test                 # 31 ta test: SQLite + xotiradagi shina, tashqi kutubxonasiz
+make test                 # 39 ta test: SQLite + xotiradagi shina, tashqi kutubxonasiz
+make run-auth             # :8004
 make run-order            # :8001
 make run-courier          # :8002
 make run-tracking         # :8003
@@ -119,7 +140,7 @@ DLQ’da xabar paydo bo‘lsa — servis logida shu hodisa bo‘yicha `exc` mayd
 Har bir baza alohida zaxiralanadi:
 
 ```sh
-for s in order courier tracking; do
+for s in auth order courier tracking; do
   docker compose exec -T "$s-db" pg_dump -U "$s" -d "$s" --format=custom > "backup-$s-$(date +%F).dump"
 done
 
@@ -137,14 +158,15 @@ tracking-db read model: uni yo‘qotish xavfli emas, lekin hozircha hodisalarni 
 `.github/workflows/ci.yml` har bir `main` PR va push’da:
 
 1. **test** — testlar Python 3.9 va 3.13 da (tashqi kutubxonasiz).
-2. **stack** —
+2. **codespace** — `.devcontainer` yig‘iladi, ichida stack ko‘tariladi va smoke test ishlaydi.
+3. **stack** —
    `docker compose config`, obraz ichida testlar, butun stack `up --wait`,
    `smoke_test.sh` (gateway orqali to‘liq hayot sikli, 409/404, `/internal` yopiqligi, tracking
    hodisalar orqali yangilanishi) va `resilience_test.sh`:
    - har bir servis boshqa servis bazasini tarmoqda ko‘rmasligi (6 juftlik);
    - RabbitMQ to‘xtatilganda buyurtma yaratilishi, `degraded` holat va broker qaytgach hodisa yetib borishi;
    - servislar va bazalar qayta ishga tushirilgandan keyin ma’lumot saqlanishi.
-3. Har doim loglar chiqariladi va `down --volumes` bilan tozalanadi.
+4. Har doim loglar chiqariladi va `down --volumes` bilan tozalanadi.
 
 ## Nosozliklarni bartaraf etish
 
@@ -155,5 +177,9 @@ tracking-db read model: uni yo‘qotish xavfli emas, lekin hozircha hodisalarni 
 | `/health/<servis>` → `degraded`, `broker: fail` | RabbitMQ ishlamayapti | `docker compose ps rabbitmq`; hodisalar outbox’da kutadi, broker qaytgach yuboriladi |
 | `/api/v1/tracking/{code}` → `404`, lekin buyurtma bor | Hodisa hali yetib kelmagan | 1–2 s kuting; uzoq davom etsa broker va tracking-service loglarini tekshiring |
 | `dispatch` → `503` | courier-service ishlamayapti | `docker compose logs courier-service` |
+| Har qanday so‘rov → `401` | Token yo‘q yoki muddati o‘tgan (15 daqiqa) | Qayta login yoki `POST /api/v1/auth/refresh` |
+| `403 Bu amal uchun ruxsat yo‘q` | Rol mos emas | Rollar jadvali: [api.md](api.md) |
+| Admin paroli ishlamaydi | `CRYSTAL_ADMIN_PASSWORD` birinchi ishga tushishdan keyin o‘zgartirilgan | Admin faqat bir marta yaratiladi; `down --volumes` yoki admin orqali yangi foydalanuvchi |
+| Codespaces havolasi `404`/login so‘raydi | 8000 port `Private` | PORTS → 8000 → Port Visibility → Public |
 | Gateway `503 Servis vaqtincha mavjud emas` | Upstream konteyner o‘chgan | `docker compose ps`, `docker compose up -d --wait` |
 | `429` | Rate limit (50 r/s) | Yuklama testlari uchun `gateway/nginx.conf`da `rate`ni oshiring |
