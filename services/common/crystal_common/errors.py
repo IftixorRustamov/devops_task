@@ -13,6 +13,18 @@ class ValidationError(DomainError):
     status = 400
 
 
+class UnauthorizedError(DomainError):
+    """Token yo‘q, noto‘g‘ri yoki muddati o‘tgan."""
+
+    status = 401
+
+
+class ForbiddenError(DomainError):
+    """Foydalanuvchi aniqlangan, lekin bu amalga ruxsati yo‘q."""
+
+    status = 403
+
+
 class NotFoundError(DomainError):
     """Obyekt topilmadi."""
 

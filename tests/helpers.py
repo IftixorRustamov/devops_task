@@ -24,11 +24,30 @@ class TempDatabases:
 
 
 class FakeCourierClient:
+    """`assigned`: buyurtma kodi -> kuryer logini."""
+
     def __init__(self):
-        self.assigned = set()
+        self.assigned = {}
+
+    def assigned_courier(self, code):
+        return self.assigned.get(code)
 
     def has_assignment(self, code):
         return code in self.assigned
+
+
+class FakeAuthClient:
+    def __init__(self, couriers=("ali", "vali")):
+        self.couriers = set(couriers)
+
+    def is_active_courier(self, username):
+        return username in self.couriers
+
+
+class User:
+    def __init__(self, username, role):
+        self.username = username
+        self.role = role
 
 
 class FakeOrderClient:

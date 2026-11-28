@@ -3,8 +3,10 @@
 from uuid import uuid4
 
 from crystal_common.errors import (
-    ConflictError, NotFoundError, UpstreamError, ValidationError, normalize_code, require_text,
+    ConflictError, ForbiddenError, NotFoundError, UpstreamError, ValidationError, normalize_code,
+    require_text,
 )
+from crystal_common.security import COURIER
 from crystal_common.events import new_event, record_event, utc_now
 
 from .domain import CODE_PREFIX, NEW, ORDER_CREATED, ORDER_STATUS_CHANGED, TRANSITIONS
@@ -18,13 +20,17 @@ class CourierClient:
     def __init__(self, client):
         self.client = client
 
-    def has_assignment(self, code):
-        status, _payload = self.client.get(f"/internal/assignments/{code}")
+    def assigned_courier(self, code):
+        """Biriktirilgan kuryer logini yoki None."""
+        status, payload = self.client.get(f"/internal/assignments/{code}")
         if status == 200:
-            return True
+            return payload["courier"]
         if status == 404:
-            return False
+            return None
         raise UpstreamError("courier-service kutilmagan javob qaytardi.")
+
+    def has_assignment(self, code):
+        return self.assigned_courier(code) is not None
 
 
 class OrderService:
@@ -86,11 +92,19 @@ class OrderService:
             raise NotFoundError("Buyurtma topilmadi.")
         return {"code": code, "status": row[0], "warehouse_id": row[1], "version": row[2]}
 
-    def move(self, code, action):
+    def move(self, code, action, actor=None):
+        """`actor` — so‘rovni yuborgan foydalanuvchi. Kuryer faqat O‘ZIGA biriktirilgan
+        buyurtmani topshira oladi."""
         if action not in TRANSITIONS:
             raise ValidationError(f"Noma’lum amal: {action}")
         code = normalize_code(code)
         previous, next_status = TRANSITIONS[action]
+        if actor is not None and actor.role == COURIER:
+            if action != "deliver":
+                raise ForbiddenError("Kuryer faqat buyurtmani topshira oladi.")
+            self.internal_view(code)  # mavjud bo‘lmasa 404
+            if self.courier.assigned_courier(code) != actor.username:
+                raise ForbiddenError("Bu buyurtma sizga biriktirilmagan.")
         if action == "dispatch":
             # Tarmoq so‘rovi tranzaksiyadan OLDIN: baza qulfi tashqi servisni kutib turmaydi.
             # Biriktirish o‘chirilmaydi, shuning uchun bu tekshiruv keyin ham haqiqiy qoladi.
