@@ -156,6 +156,15 @@ class IntegrationTest(unittest.TestCase):
         _, assignment, _ = call(s.courier_server, "GET", f"/internal/assignments/{code}")
         self.assertIsNotNone(assignment["delivered_at"])
 
+    def test_stats_endpoints_are_staff_only(self):
+        s = self.stack
+        self.assertEqual(call(s.order_server, "GET", "/api/v1/stats")[0], 200)
+        self.assertEqual(call(s.order_server, "GET", "/api/v1/stats", as_user=ALI)[0], 403)
+        status, payload, _ = call(s.courier_server, "GET", "/api/v1/couriers/stats")
+        self.assertEqual(status, 200)
+        self.assertIn("items", payload)
+        self.assertEqual(call(s.courier_server, "GET", "/api/v1/couriers/stats", as_user=ALI)[0], 403)
+
     def test_assign_conflicts_and_not_found(self):
         s = self.stack
         _, created, _ = call(s.order_server, "POST", "/api/v1/orders", {"address": "Yunusobod"})

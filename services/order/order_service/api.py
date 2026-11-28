@@ -25,6 +25,11 @@ def build_app(service, db, bus, relay):
         body = request.json()
         return HTTPStatus.CREATED, service.create_order(body.get("address"), body.get("warehouse_id", 1))
 
+    @app.route("GET", r"/api/v1/stats")
+    def stats(request):
+        require_role(request, *STAFF)
+        return HTTPStatus.OK, service.stats()
+
     @app.route("GET", rf"/api/v1/orders/{CODE}")
     def track_order(request, code):
         require_role(request, ADMIN, OPERATOR, COURIER)

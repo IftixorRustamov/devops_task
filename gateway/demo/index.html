@@ -176,6 +176,82 @@ code, .code { font-family: var(--mono); }
 .timeline li::before { content: ""; position: absolute; left: -20px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--ink-2); }
 .timeline time { display: block; color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; }
 
+/* ---------- bo‘limlar (tablar) ---------- */
+.tabs { background: var(--surface); border-bottom: 1px solid var(--line); }
+.tabs-inner { max-width: 1240px; margin: 0 auto; padding: 0 24px; display: flex; gap: 4px; overflow-x: auto; }
+.tab { appearance: none; background: none; border: 0; border-bottom: 3px solid transparent; padding: 12px 14px 11px; font: inherit; font-weight: 600; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.tab:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 45%, transparent); outline-offset: -3px; }
+@media (max-width: 480px) { .tabs-inner { padding: 0 8px; } .tab { padding: 12px 9px 11px; } }
+.layout.wide { grid-template-columns: 1fr; }
+.layout.wide .rail { display: none; }
+
+/* ---------- dashboard ---------- */
+#view-dashboard > .block { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+.dash-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.dash-meta { font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 12px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--radius-m); margin-bottom: 28px; }
+.tile { padding: 16px 18px; }
+.tile + .tile { border-left: 1px solid var(--line); }
+.tile-value { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile-label { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+@media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile:nth-child(3) { border-left: 0; } .tile:nth-child(n+3) { border-top: 1px solid var(--line); } }
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
+@media (max-width: 860px) { .charts { grid-template-columns: 1fr; } }
+.chart h2 { font-size: 15px; font-weight: 650; }
+.chart .sub { font-size: 13px; color: var(--ink-2); margin: 2px 0 10px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart svg text { font-family: var(--font); fill: var(--ink-2); font-size: 12px; }
+.chart svg .value { fill: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart svg .label { fill: var(--ink); font-size: 13px; }
+.chart svg .grid { stroke: #E3E8EE; stroke-width: 1; }
+.chart svg .hit { fill: transparent; cursor: default; }
+.chart svg .hit:hover + .mark, .chart svg .mark.hover { opacity: .8; }
+.chart details { margin-top: 8px; font-size: 13px; }
+.chart summary { cursor: pointer; color: var(--ink-2); }
+.chart .table { margin-top: 6px; }
+.legend { display: flex; gap: 16px; font-size: 13px; color: var(--ink); margin-bottom: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.tooltip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: #fff; font-size: 13px; padding: 6px 10px; border-radius: var(--radius-s); box-shadow: 0 4px 14px rgba(27,36,48,.2); white-space: nowrap; }
+.tooltip b { font-variant-numeric: tabular-nums; }
+
+/* ---------- arxitektura ---------- */
+.arch svg { display: block; width: 100%; height: auto; }
+.arch .node rect { fill: #fff; stroke: var(--line); stroke-width: 1.5; }
+.arch .node.db rect { fill: #F6F8FA; }
+.arch .node .name { font: 650 14px var(--font); fill: var(--ink); }
+.arch .node .role { font: 12px var(--font); fill: var(--ink-2); }
+.arch .node .badge text { font: 700 11px var(--font); fill: #fff; }
+.arch .node[data-health="ok"] .badge circle { fill: #137344; }
+.arch .node[data-health="degraded"] .badge circle { fill: #9A6300; }
+.arch .node[data-health="fail"] .badge circle { fill: #B42318; }
+.arch .node[data-health="unknown"] .badge circle { fill: #8D99A8; }
+.arch .node:focus-visible { outline: none; }
+.arch .node:focus-visible rect { stroke: var(--focus); stroke-width: 3; }
+.arch .node[data-health="ok"] rect { stroke: #137344; }
+.arch .node[data-health="degraded"] rect { stroke: #9A6300; stroke-dasharray: 5 3; }
+.arch .node[data-health="fail"] rect { stroke: #B42318; stroke-width: 2.5; }
+.arch .edge { stroke: #8D99A8; stroke-width: 1.5; fill: none; }
+.arch .edge.sync { stroke: var(--ink); }
+.arch .edge.event { stroke: #9A6300; stroke-dasharray: 6 4; }
+.arch .edge.data { stroke: #AEB8C4; }
+.arch .edge-label { font: 11px var(--font); fill: var(--ink-2); }
+.arch .zone { fill: none; stroke: #C9D2DC; stroke-dasharray: 3 4; }
+.arch .zone-label { font: 600 11px var(--font); fill: var(--ink-2); }
+.arch-legend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; margin: 14px 0 22px; color: var(--ink-2); }
+.arch-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.arch-legend svg { width: 34px; height: 8px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px 28px; margin-top: 26px; }
+.facts h3 { font-size: 14px; margin-bottom: 4px; }
+.facts p { font-size: 14px; color: var(--ink-2); }
+.health { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+.health[data-health="ok"] { color: #137344; }
+.health[data-health="degraded"] { color: #9A6300; }
+.health[data-health="fail"] { color: #B42318; }
+.health[data-health="unknown"] { color: var(--ink-2); }
+
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 [hidden] { display: none !important; }
 
@@ -195,8 +271,9 @@ code, .code { font-family: var(--mono); }
     </div>
   </div>
 </header>
+<nav class="tabs" aria-label="Bo‘limlar"><div class="tabs-inner" id="tabs" role="tablist"></div></nav>
 
-<div class="layout">
+<div class="layout" id="layout">
   <main class="workspace" id="workspace" aria-live="polite">
     <!-- Kirish -->
     <section id="view-login">
@@ -266,7 +343,7 @@ code, .code { font-family: var(--mono); }
 
     <!-- Admin: foydalanuvchilar -->
     <section id="view-users" hidden>
-      <div class="block">
+      <div>
         <h2 class="block-title">Foydalanuvchilar</h2>
         <p class="lead">Faqat admin ko‘radi. Yangi xodim yarating yoki namoyish uchun tayyor hisoblarni bir bosishda qo‘shing.</p>
         <form id="user-form" class="inline-form" novalidate>
@@ -280,6 +357,50 @@ code, .code { font-family: var(--mono); }
         <div id="user-form-msg" role="status" style="margin-top: 10px"></div>
         <div style="margin: 16px 0"><button class="btn btn-secondary" type="button" id="seed-demo">Namoyish foydalanuvchilarini yaratish</button></div>
         <div id="users"></div>
+      </div>
+    </section>
+
+    <!-- Dashboard -->
+    <section id="view-dashboard" hidden>
+      <div class="dash-head">
+        <div><h1 class="view-title">Dashboard</h1><p class="lead" style="margin:0">Buyurtmalar oqimi va kuryerlar yuklamasi. Har 10 soniyada avtomatik yangilanadi.</p></div>
+        <div class="dash-meta"><span id="dash-updated"></span><button class="btn btn-secondary btn-small" type="button" id="dash-refresh">Yangilash</button></div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+      <div class="charts">
+        <figure class="chart" style="margin:0"><h2>Holatlar bo‘yicha</h2><p class="sub">Har bir holatda hozir nechta buyurtma bor</p><div id="chart-status"></div></figure>
+        <figure class="chart" style="margin:0"><h2>Yangi buyurtmalar, oxirgi 24 soat</h2><p class="sub">Har soatda yaratilgan buyurtmalar soni</p><div id="chart-hourly"></div></figure>
+        <figure class="chart" style="margin:0"><h2>Bosqichlar o‘rtacha davomiyligi</h2><p class="sub">Oldingi holatdan shu holatga o‘tish uchun ketgan vaqt</p><div id="chart-stages"></div></figure>
+        <figure class="chart" style="margin:0"><h2>Kuryerlar yuklamasi</h2><p class="sub">Topshirilgan va hozir qo‘lidagi buyurtmalar</p><div id="chart-couriers"></div></figure>
+      </div>
+      <div class="block">
+        <h2 class="block-title">Oxirgi buyurtmalar</h2>
+        <div id="dash-recent"></div>
+      </div>
+    </section>
+
+    <!-- Arxitektura -->
+    <section id="view-arch" class="arch" hidden>
+      <div class="dash-head">
+        <div><h1 class="view-title">Tizim arxitekturasi</h1><p class="lead" style="margin:0">Jonli holat: har bir servis 5 soniyada tekshiriladi. Ramka rangi — servis va uning bazasi holati.</p></div>
+        <div class="dash-meta"><span id="arch-updated"></span></div>
+      </div>
+      <div id="arch-diagram"></div>
+      <div class="arch-legend">
+        <span><svg viewBox="0 0 34 8" aria-hidden="true"><line x1="0" y1="4" x2="34" y2="4" class="edge sync" style="stroke:#1B2430;stroke-width:1.5"/></svg>Sinxron HTTP</span>
+        <span><svg viewBox="0 0 34 8" aria-hidden="true"><line x1="0" y1="4" x2="34" y2="4" style="stroke:#9A6300;stroke-width:1.5;stroke-dasharray:6 4"/></svg>Hodisa (RabbitMQ)</span>
+        <span><svg viewBox="0 0 34 8" aria-hidden="true"><line x1="0" y1="4" x2="34" y2="4" style="stroke:#AEB8C4;stroke-width:1.5"/></svg>O‘z bazasiga ulanish</span>
+        <span class="health" data-health="ok">✓ Ishlayapti</span>
+        <span class="health" data-health="degraded">! Qisman (broker yo‘q, outbox kutmoqda)</span>
+        <span class="health" data-health="fail">✕ Ishlamayapti</span>
+      </div>
+      <h2 class="block-title">Servislar holati</h2>
+      <div id="arch-table"></div>
+      <div class="facts">
+        <div><h3>Har bir servisning o‘z bazasi</h3><p>4 ta PostgreSQL, har biri alohida yopiq tarmoqda. Boshqa servis unga hatto tarmoqda ham ulana olmaydi.</p></div>
+        <div><h3>Token gateway’da tekshiriladi</h3><p>nginx har so‘rovni auth-service’da tekshiradi va servisga foydalanuvchi va rolini uzatadi. Imzo kaliti faqat auth-service’da.</p></div>
+        <div><h3>Hodisalar yo‘qolmaydi</h3><p>Holat o‘zgarishi va hodisa bitta tranzaksiyada (outbox) yoziladi. RabbitMQ o‘chsa ham buyurtmalar yaratiladi.</p></div>
+        <div><h3>Kuzatuv alohida o‘qish modeli</h3><p>tracking-service hodisalardan o‘z bazasini quradi. order-service ishlamasa ham mijoz kuzatuvi ishlaydi.</p></div>
       </div>
     </section>
   </main>
@@ -303,6 +424,7 @@ code, .code { font-family: var(--mono); }
   </aside>
 </div>
 
+<div class="tooltip" id="tooltip" role="tooltip" hidden></div>
 <script>
 "use strict";
 const DEMO_PASSWORD = "demo-parol-1";
@@ -320,7 +442,7 @@ const STEPS = [
 ];
 const TONE = Object.fromEntries(STEPS.map((s) => [s.status, s.tone]));
 
-const state = { token: null, refresh: null, user: null, order: null, assigned: {}, recent: [] };
+const state = { token: null, refresh: null, user: null, order: null, assigned: {}, recent: [], tab: "login" };
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmtTime = (iso) => { if (!iso) return ""; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString("uz-UZ", { hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "2-digit" }); };
@@ -337,7 +459,7 @@ function logEntry(what, method, path, status, body) {
   $("log").prepend(li);
 }
 
-async function api(what, method, path, body, { auth = true, retried = false } = {}) {
+async function api(what, method, path, body, { auth = true, retried = false, quiet = false } = {}) {
   const headers = {};
   if (auth && state.token) headers.Authorization = "Bearer " + state.token;
   if (body !== undefined) headers["Content-Type"] = "application/json";
@@ -346,14 +468,14 @@ async function api(what, method, path, body, { auth = true, retried = false } = 
     response = await fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
     try { data = await response.json(); } catch (_) { data = {}; }
   } catch (_) {
-    logEntry(what, method, path, 0, { error: "Tarmoq xatosi" });
+    if (!quiet) logEntry(what, method, path, 0, { error: "Tarmoq xatosi" });
     return { status: 0, data: { error: "Server bilan aloqa yo‘q. Internetni tekshiring." } };
   }
   // Access token 15 daqiqada tugaydi — bir marta jimgina yangilab, so‘rovni qaytaramiz.
   if (response.status === 401 && auth && state.refresh && !retried) {
-    if (await refreshTokens()) return api(what, method, path, body, { auth, retried: true });
+    if (await refreshTokens()) return api(what, method, path, body, { auth, retried: true, quiet });
   }
-  logEntry(what, method, path, response.status, data);
+  if (!quiet) logEntry(what, method, path, response.status, data);
   if (response.status === 401 && auth && state.user) { signOut("Sessiya tugadi. Qayta kiring."); }
   return { status: response.status, data };
 }
@@ -378,21 +500,47 @@ function showNotice(el, text, kind = "error") {
 }
 
 /* ---------- sessiya ---------- */
+const TABS = {
+  login:     { label: "Kirish",            view: "view-login" },
+  orders:    { label: "Buyurtmalar",       view: "view-orders" },
+  courier:   { label: "Yetkazmalarim",     view: "view-courier" },
+  dashboard: { label: "Dashboard",         view: "view-dashboard", wide: true },
+  users:     { label: "Foydalanuvchilar",  view: "view-users" },
+  arch:      { label: "Arxitektura",       view: "view-arch", wide: true },
+};
+const ROLE_TABS = {
+  none: ["login", "arch"],
+  operator: ["orders", "dashboard", "arch"],
+  admin: ["orders", "dashboard", "users", "arch"],
+  courier: ["courier", "arch"],
+};
+const timers = {};
+
 function render() {
   const role = state.user?.role;
   $("session").hidden = !state.user;
   if (state.user) { $("session-name").textContent = state.user.username; $("session-role").textContent = ROLE_NAMES[role]; }
-  $("view-login").hidden = !!state.user;
-  $("view-orders").hidden = !(role === "operator" || role === "admin");
-  $("view-users").hidden = role !== "admin";
-  $("view-courier").hidden = role !== "courier";
-  if (role === "admin") loadUsers();
-  if (role === "courier") loadCourier();
-  renderRecent();
+  const allowed = ROLE_TABS[role || "none"];
+  if (!allowed.includes(state.tab)) state.tab = allowed[0];
+  $("tabs").innerHTML = allowed.map((key) =>
+    `<button class="tab" role="tab" type="button" data-tab="${key}" aria-selected="${key === state.tab}" aria-controls="${TABS[key].view}">${TABS[key].label}</button>`).join("");
+  $("tabs").querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => openTab(b.dataset.tab)));
+  $("tabs").querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  Object.entries(TABS).forEach(([key, tab]) => { $(tab.view).hidden = key !== state.tab; });
+  $("layout").classList.toggle("wide", !!TABS[state.tab].wide);
+  Object.values(timers).forEach(clearInterval);
+  if (state.tab === "users") loadUsers();
+  if (state.tab === "courier") loadCourier();
+  if (state.tab === "orders") renderRecent();
+  if (state.tab === "dashboard") { loadDashboard(); timers.dash = setInterval(() => document.hidden || loadDashboard(true), 10000); }
+  if (state.tab === "arch") { loadArch(); timers.arch = setInterval(() => document.hidden || loadArch(), 5000); }
 }
+
+function openTab(key) { state.tab = key; render(); }
 
 function signOut(message) {
   state.token = state.refresh = state.user = state.order = null;
+  state.tab = "login";
   $("order-panel").hidden = true;
   render();
   showNotice($("login-error"), message || "");
@@ -584,6 +732,227 @@ $("seed-demo").addEventListener("click", (event) => busy(event.currentTarget, as
   showNotice($("user-form-msg"), `Tayyor: ${created.join(", ")} (parol ${DEMO_PASSWORD}).`, "ok");
 }));
 
+/* ---------- grafiklar (SVG, tashqi kutubxonasiz) ---------- */
+const COLORS = { new: "#5B6676", ware: "#9A6300", transit: "#1F55C7", done: "#137344", ink: "#1B2430" };
+const fmtNum = (n) => Number(n).toLocaleString("uz-UZ");
+function fmtDuration(seconds) {
+  if (seconds == null) return "—";
+  const s = Math.round(seconds);
+  if (s < 60) return `${s} s`;
+  if (s < 3600) return `${Math.floor(s / 60)} daq ${s % 60} s`;
+  return `${Math.floor(s / 3600)} soat ${Math.floor((s % 3600) / 60)} daq`;
+}
+function niceMax(value) {
+  if (value <= 4) return Math.max(1, Math.ceil(value));
+  const step = Math.pow(10, Math.floor(Math.log10(value)));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * step >= value) return m * step;
+  return value;
+}
+// Bar: 4px yumaloq uchi, asos tomoni to‘g‘ri burchak.
+function hBarPath(x, y, w, h, r = 4) {
+  if (w <= 0) return "";
+  r = Math.min(r, w, h / 2);
+  return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`;
+}
+function colPath(x, base, w, h, r = 4) {
+  if (h <= 0) return "";
+  r = Math.min(r, h, w / 2);
+  const top = base - h;
+  return `M${x},${base}V${top + r}Q${x},${top} ${x + r},${top}H${x + w - r}Q${x + w},${top} ${x + w},${top + r}V${base}Z`;
+}
+function tableView(headers, rows) {
+  return `<details><summary>Jadval ko‘rinishi</summary><table class="table"><thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></details>`;
+}
+
+// Gorizontal bar: kategoriya nomi chapda (rangga tayanmaydi), qiymat uchida.
+function barChart(el, rows, format = fmtNum, headers = ["Nomi", "Qiymat"]) {
+  const W = 520, labelW = 112, valueW = 92, barH = 22, gap = 16, top = 4;
+  const H = top + rows.length * (barH + gap) - gap + 4;
+  const max = Math.max(...rows.map((r) => r.value || 0), 0);
+  const scale = max ? (W - labelW - valueW) / max : 0;
+  const bars = rows.map((r, i) => {
+    const y = top + i * (barH + gap), w = (r.value || 0) * scale;
+    return `<g><text class="label" x="0" y="${y + barH / 2 + 4}">${esc(r.label)}</text>
+      <line class="grid" x1="${labelW}" y1="${y - 4}" x2="${labelW}" y2="${y + barH + 4}"/>
+      <path class="mark" d="${hBarPath(labelW, y, w, barH)}" fill="${r.color}"/>
+      <text class="value" x="${labelW + w + 8}" y="${y + barH / 2 + 4}">${esc(r.value == null ? "—" : format(r.value))}</text>
+      <rect class="hit" x="0" y="${y - gap / 2}" width="${W}" height="${barH + gap}" tabindex="0" data-tip="${esc(r.label)}: <b>${esc(r.value == null ? "ma’lumot yo‘q" : format(r.value))}</b>"/></g>`;
+  }).join("");
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(rows.map((r) => `${r.label}: ${r.value == null ? "—" : format(r.value)}`).join("; "))}">${bars}</svg>` +
+    tableView(headers, rows.map((r) => [r.label, r.value == null ? "—" : format(r.value)]));
+}
+
+// Ustunli grafik: vaqt bo‘yicha bitta qator (legend kerak emas — sarlavha aytadi).
+function columnChart(el, points) {
+  const W = 520, H = 210, left = 30, bottom = 24, top = 8, plotH = H - bottom - top, plotW = W - left;
+  const max = niceMax(Math.max(...points.map((p) => p.count), 0));
+  const slot = plotW / points.length, barW = Math.min(16, slot * 0.62);
+  const ticks = [0, max / 2, max].filter((v, i, a) => a.indexOf(v) === i && Number.isInteger(v));
+  const grid = ticks.map((t) => { const y = top + plotH - (t / max) * plotH;
+    return `<line class="grid" x1="${left}" x2="${W}" y1="${y}" y2="${y}"/><text x="${left - 6}" y="${y + 4}" text-anchor="end">${fmtNum(t)}</text>`; }).join("");
+  const cols = points.map((p, i) => {
+    const x = left + i * slot + (slot - barW) / 2, h = (p.count / max) * plotH, base = top + plotH;
+    const hour = new Date(p.hour).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+    const label = i % 6 === 0 || i === points.length - 1 ? `<text x="${x + barW / 2}" y="${H - 6}" text-anchor="middle">${hour}</text>` : "";
+    return `<g><path class="mark" d="${colPath(x, base, barW, h)}" fill="${COLORS.ink}"/>${label}
+      <rect class="hit" x="${left + i * slot}" y="${top}" width="${slot}" height="${plotH}" tabindex="-1" data-tip="${hour}: <b>${fmtNum(p.count)}</b> ta buyurtma"/></g>`;
+  }).join("");
+  const total = points.reduce((a, p) => a + p.count, 0);
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Oxirgi 24 soatda ${total} ta buyurtma">${grid}${cols}</svg>` +
+    tableView(["Soat", "Buyurtmalar"], points.filter((p) => p.count).map((p) => [fmtTime(p.hour), p.count]));
+}
+
+// Kuryerlar: ikki qismli (topshirilgan + qo‘lida) bar, qismlar orasida 2px oq tirqish.
+function courierChart(el, items) {
+  if (!items.length) { el.innerHTML = `<div class="empty">Hali hech bir kuryerga buyurtma biriktirilmagan.</div>`; return; }
+  const W = 520, labelW = 112, valueW = 70, barH = 22, gap = 16, top = 4;
+  const H = top + items.length * (barH + gap) - gap + 4;
+  const max = Math.max(...items.map((c) => c.assigned));
+  const scale = (W - labelW - valueW) / max;
+  const rows = items.map((c, i) => {
+    const y = top + i * (barH + gap), wd = c.delivered * scale, wa = c.active * scale;
+    const gapPx = wd && wa ? 2 : 0;
+    const activePath = wa ? (wd ? hBarPath(labelW + wd + gapPx, y, wa - gapPx, barH) : hBarPath(labelW, y, wa, barH)) : "";
+    const doneShape = wd ? (wa ? `<rect x="${labelW}" y="${y}" width="${wd}" height="${barH}" fill="${COLORS.done}"/>` : `<path d="${hBarPath(labelW, y, wd, barH)}" fill="${COLORS.done}"/>`) : "";
+    return `<g><text class="label" x="0" y="${y + barH / 2 + 4}">${esc(c.courier)}</text>${doneShape}
+      ${activePath ? `<path d="${activePath}" fill="${COLORS.transit}"/>` : ""}
+      <text class="value" x="${labelW + (wd + wa) + 8}" y="${y + barH / 2 + 4}">${fmtNum(c.assigned)}</text>
+      <rect class="hit" x="0" y="${y - gap / 2}" width="${W}" height="${barH + gap}" tabindex="0"
+        data-tip="${esc(c.courier)}: <b>${c.delivered}</b> topshirilgan, <b>${c.active}</b> qo‘lida"/></g>`;
+  }).join("");
+  el.innerHTML = `<div class="legend"><span><i style="background:${COLORS.done}"></i>Topshirilgan</span><span><i style="background:${COLORS.transit}"></i>Qo‘lida</span></div>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(items.map((c) => `${c.courier}: ${c.delivered} topshirilgan, ${c.active} qo‘lida`).join("; "))}">${rows}</svg>` +
+    tableView(["Kuryer", "Jami", "Topshirilgan", "Qo‘lida"], items.map((c) => [c.courier, c.assigned, c.delivered, c.active]));
+}
+
+// Tooltip: sichqoncha va klaviatura (Tab bilan fokus) uchun bitta element.
+const tooltip = $("tooltip");
+function showTip(target, x, y) { tooltip.innerHTML = target.dataset.tip; tooltip.hidden = false;
+  const r = tooltip.getBoundingClientRect(); tooltip.style.left = `${Math.min(x + 14, innerWidth - r.width - 8)}px`; tooltip.style.top = `${y - r.height - 10}px`; }
+document.addEventListener("mousemove", (e) => { const t = e.target.closest?.("[data-tip]"); t ? showTip(t, e.clientX, e.clientY) : (tooltip.hidden = true); });
+document.addEventListener("focusin", (e) => { const t = e.target.closest?.("[data-tip]"); if (t) { const b = t.getBoundingClientRect(); showTip(t, b.left + b.width / 2, b.top); } });
+document.addEventListener("focusout", () => { tooltip.hidden = true; });
+document.addEventListener("scroll", () => { tooltip.hidden = true; }, true);
+
+/* ---------- dashboard ---------- */
+$("dash-refresh").addEventListener("click", (e) => busy(e.currentTarget, () => loadDashboard()));
+
+async function loadDashboard(quiet = false) {
+  const [orders, couriers] = await Promise.all([
+    api("Dashboard ko‘rsatkichlari", "GET", "/api/v1/stats", undefined, { quiet }),
+    api("Kuryerlar yuklamasi", "GET", "/api/v1/couriers/stats", undefined, { quiet }),
+  ]);
+  if (orders.status !== 200) return;
+  const d = orders.data, by = d.by_status;
+  const deliveredShare = d.total ? Math.round((by["Yetkazildi"] / d.total) * 100) : 0;
+  $("tiles").innerHTML = [
+    [fmtNum(d.total), "Jami buyurtmalar"],
+    [fmtNum(by["Yo‘lda"]), "Hozir yo‘lda"],
+    [`${deliveredShare}%`, `Yetkazilgan (${fmtNum(by["Yetkazildi"])} ta)`],
+    [fmtDuration(d.delivery_avg_seconds), "O‘rtacha yetkazish vaqti"],
+  ].map(([v, l]) => `<div class="tile"><div class="tile-value">${esc(v)}</div><div class="tile-label">${esc(l)}</div></div>`).join("");
+
+  if (!d.total) {
+    const empty = `<div class="empty">Hali buyurtma yo‘q. «Buyurtmalar» bo‘limida birinchisini yarating.</div>`;
+    ["chart-status", "chart-hourly", "chart-stages"].forEach((id) => { $(id).innerHTML = empty; });
+  } else {
+    barChart($("chart-status"), STEPS.map((s) => ({ label: s.status, value: by[s.status], color: COLORS[s.tone] })), fmtNum, ["Holat", "Buyurtmalar"]);
+    columnChart($("chart-hourly"), d.created_per_hour);
+    const stages = [["receive", "Omborda", "ware"], ["dispatch", "Yo‘lda", "transit"], ["deliver", "Yetkazildi", "done"]];
+    barChart($("chart-stages"), stages.map(([a, label, tone]) => ({ label, value: d.stage_avg_seconds[a], color: COLORS[tone] })), fmtDuration, ["Bosqich", "O‘rtacha vaqt"]);
+  }
+  courierChart($("chart-couriers"), couriers.status === 200 ? couriers.data.items : []);
+
+  $("dash-recent").innerHTML = d.recent.length ? `<table class="table"><thead><tr><th>Kod</th><th>Holat</th><th>Yaratilgan</th><th>Oxirgi o‘zgarish</th><th></th></tr></thead><tbody>${
+    d.recent.map((o) => `<tr><td class="code">${esc(o.code)}</td><td><span class="status" data-tone="${TONE[o.status]}">${esc(o.status)}</span></td>
+      <td>${esc(fmtTime(o.created_at))}</td><td>${esc(fmtTime(o.updated_at))}</td>
+      <td style="text-align:right"><button class="link-btn" type="button" data-goto="${esc(o.code)}">Ochish</button></td></tr>`).join("")}</tbody></table>`
+    : `<div class="empty">Hali buyurtma yo‘q.</div>`;
+  $("dash-recent").querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", async () => { openTab("orders"); await openOrder(b.dataset.goto); }));
+  $("dash-updated").textContent = `Yangilandi: ${new Date().toLocaleTimeString("uz-UZ")}`;
+}
+
+/* ---------- arxitektura (jonli) ---------- */
+const NODES = {
+  client:   { x: 405, y: 16,  w: 150, h: 52, name: "Mijoz", role: "brauzer, curl" },
+  gateway:  { x: 380, y: 104, w: 200, h: 56, name: "gateway", role: "nginx, JWT tekshiruvi" },
+  order:    { x: 65,  y: 214, w: 170, h: 60, name: "order-service", role: "buyurtma, holatlar" },
+  courier:  { x: 285, y: 214, w: 170, h: 60, name: "courier-service", role: "kuryer biriktirish" },
+  auth:     { x: 505, y: 214, w: 170, h: 60, name: "auth-service", role: "login, JWT, rollar" },
+  tracking: { x: 725, y: 214, w: 170, h: 60, name: "tracking-service", role: "ommaviy kuzatuv" },
+  "order-db":    { x: 85,  y: 330, w: 130, h: 50, name: "order-db", role: "PostgreSQL", db: true },
+  "courier-db":  { x: 305, y: 330, w: 130, h: 50, name: "courier-db", role: "PostgreSQL", db: true },
+  "auth-db":     { x: 525, y: 330, w: 130, h: 50, name: "auth-db", role: "PostgreSQL", db: true },
+  "tracking-db": { x: 745, y: 330, w: 130, h: 50, name: "tracking-db", role: "PostgreSQL", db: true },
+  rabbitmq: { x: 65,  y: 436, w: 830, h: 46, name: "RabbitMQ", role: "crystal.events — order.created, order.status_changed, courier.assigned" },
+};
+const BADGE = { ok: "✓", degraded: "!", fail: "✕", unknown: "…" };
+const STATE_TEXT = { ok: "✓ ishlayapti", degraded: "! qisman", fail: "✕ ishlamayapti", unknown: "… tekshirilmoqda" };
+const cx = (n) => NODES[n].x + NODES[n].w / 2;
+
+function archSvg(health) {
+  const node = (id) => { const n = NODES[id], h = health[id] || "unknown", wide = id === "rabbitmq";
+    return `<g class="node${n.db ? " db" : ""}" data-health="${h}" ${id === "client" ? "" : `tabindex="0" data-tip="${esc(n.name)}: ${esc(STATE_TEXT[h])}"`}>
+      <rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="${n.db ? 14 : 8}"/>
+      <text class="name" x="${n.x + 12}" y="${n.y + 21}">${esc(n.name)}</text>
+      <text class="role" x="${n.x + 12}" y="${n.y + (wide ? 37 : 38)}">${esc(n.role)}</text>
+      ${id === "client" ? "" : `<g class="badge" aria-hidden="true"><circle cx="${n.x + n.w - 16}" cy="${n.y + 16}" r="9"/><text x="${n.x + n.w - 16}" y="${n.y + 20}" text-anchor="middle">${BADGE[h]}</text></g>`}</g>`; };
+  const svc = ["order", "courier", "auth", "tracking"];
+  const toServices = svc.map((s) => `<path class="edge sync" d="M480,160 V188 H${cx(s)} V214" marker-end="url(#arrow)"/>`).join("");
+  const toDb = svc.map((s) => `<line class="edge data" x1="${cx(s)}" y1="274" x2="${cx(s)}" y2="330"/>`).join("");
+  const ev = (s, start, end) => `<line class="edge event" x1="${cx(s) + 74}" y1="274" x2="${cx(s) + 74}" y2="436" ${start ? 'marker-start="url(#arrow-ev)"' : ""} ${end ? 'marker-end="url(#arrow-ev)"' : ""}/>`;
+  return `<svg viewBox="0 0 960 524" role="img" aria-label="Arxitektura: gateway to‘rtta servisga yo‘naltiradi, har bir servisning o‘z PostgreSQL bazasi bor, servislar RabbitMQ orqali hodisa almashadi">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1B2430"/></marker>
+      <marker id="arrow-ev" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#9A6300"/></marker>
+    </defs>
+    <rect class="zone" x="40" y="196" width="880" height="318" rx="12"/>
+    <text class="zone-label" x="56" y="504">Ichki tarmoq — tashqaridan faqat gateway orqali</text>
+    <path class="edge sync" d="M480,68 V104" marker-end="url(#arrow)"/><text class="edge-label" x="488" y="90">HTTPS :8000</text>
+    ${toServices}${toDb}
+    <line class="edge sync" x1="235" y1="244" x2="285" y2="244" marker-start="url(#arrow)" marker-end="url(#arrow)"/><text class="edge-label" x="246" y="238">HTTP</text>
+    <line class="edge sync" x1="455" y1="244" x2="505" y2="244" marker-end="url(#arrow)"/><text class="edge-label" x="466" y="238">HTTP</text>
+    ${ev("order", false, true)}<text class="edge-label" x="${cx("order") + 80}" y="420">chiqaradi</text>
+    ${ev("courier", true, true)}<text class="edge-label" x="${cx("courier") + 80}" y="420">chiqaradi / oladi</text>
+    ${ev("tracking", true, false)}<text class="edge-label" x="${cx("tracking") + 68}" y="420" text-anchor="end">oladi</text>
+    ${Object.keys(NODES).map(node).join("")}
+  </svg>`;
+}
+
+async function probe(path) {
+  const started = performance.now();
+  try {
+    const r = await fetch(path, { cache: "no-store" });
+    const data = await r.json().catch(() => ({}));
+    return { status: r.status, data, ms: Math.round(performance.now() - started) };
+  } catch (_) { return { status: 0, data: {}, ms: null }; }
+}
+
+async function loadArch() {
+  const svc = ["auth", "order", "courier", "tracking"];
+  const [gw, ...results] = await Promise.all([probe("/health"), ...svc.map((s) => probe(`/health/${s}`))]);
+  const health = { gateway: gw.status === 200 ? "ok" : "fail" };
+  const brokers = [];
+  svc.forEach((s, i) => {
+    const r = results[i], checks = r.data.checks || {};
+    health[s] = r.status === 200 ? (r.data.status === "ok" ? "ok" : "degraded") : "fail";
+    health[`${s}-db`] = checks.database ? (checks.database === "ok" ? "ok" : "fail") : (r.status === 503 ? "fail" : "unknown");
+    if (checks.broker) brokers.push(checks.broker);
+  });
+  health.rabbitmq = !brokers.length ? "unknown" : brokers.includes("ok") ? (brokers.every((b) => b === "ok") ? "ok" : "degraded") : "fail";
+  $("arch-diagram").innerHTML = archSvg(health);
+  const label = { ok: "✓ Ishlayapti", degraded: "! Qisman", fail: "✕ Ishlamayapti", unknown: "—" };
+  const check = (v) => v == null ? "—" : v === "ok" ? "✓" : "✕";
+  $("arch-table").innerHTML = `<table class="table"><thead><tr><th>Servis</th><th>Holat</th><th>Baza</th><th>Broker</th><th>Outbox</th><th>Javob vaqti</th></tr></thead><tbody>
+    <tr><td>gateway</td><td><span class="health" data-health="${health.gateway}">${label[health.gateway]}</span></td><td>—</td><td>—</td><td>—</td><td>${gw.ms ?? "—"} ms</td></tr>
+    ${svc.map((s, i) => { const c = results[i].data.checks || {}; return `<tr><td>${s}-service</td>
+      <td><span class="health" data-health="${health[s]}">${label[health[s]]}</span></td>
+      <td>${check(c.database)}</td><td>${check(c.broker)}</td><td>${check(c.outbox_relay)}</td><td>${results[i].ms ?? "—"} ms</td></tr>`; }).join("")}
+  </tbody></table>`;
+  $("arch-updated").textContent = `Tekshirildi: ${new Date().toLocaleTimeString("uz-UZ")}`;
+}
+
 /* ---------- ommaviy kuzatuv ---------- */
 $("track-form").addEventListener("submit", (event) => {
   event.preventDefault();
@@ -600,7 +969,7 @@ $("track-form").addEventListener("submit", (event) => {
 });
 
 render();
-$("login-user").focus();
+if (!state.user) $("login-user").focus();
 </script>
 </body>
 </html>

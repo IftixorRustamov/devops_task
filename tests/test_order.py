@@ -87,6 +87,29 @@ class OrderServiceTest(unittest.TestCase):
             self.service.move(code, "deliver", actor=User("vali", "courier"))
         self.assertEqual(self.service.move(code, "deliver", actor=User("ali", "courier"))["status"], "Yetkazildi")
 
+    def test_stats(self):
+        times = iter([
+            "2026-11-28T10:00:00+00:00", "2026-11-28T10:10:00+00:00",
+            "2026-11-28T10:30:00+00:00", "2026-11-28T11:00:00+00:00",
+            "2026-11-28T11:05:00+00:00",
+        ])
+        self.service.clock = lambda: next(times)
+        code = self.create()
+        self.service.move(code, "receive")
+        self.courier.assigned[code] = "ali"
+        self.service.move(code, "dispatch")
+        self.service.move(code, "deliver")
+        self.create()  # ikkinchi buyurtma: Yangi
+        from datetime import datetime, timezone
+        stats = self.service.stats(now=datetime(2026, 11, 28, 12, 0, tzinfo=timezone.utc))
+        self.assertEqual(stats["total"], 2)
+        self.assertEqual(stats["by_status"], {"Yangi": 1, "Omborda": 0, "Yo‘lda": 0, "Yetkazildi": 1})
+        self.assertEqual(stats["stage_avg_seconds"], {"receive": 600.0, "dispatch": 1200.0, "deliver": 1800.0})
+        self.assertEqual(stats["delivery_avg_seconds"], 3600.0)
+        self.assertEqual(len(stats["created_per_hour"]), 24)
+        self.assertEqual(sum(h["count"] for h in stats["created_per_hour"]), 2)
+        self.assertEqual(stats["recent"][0]["status"], "Yangi")
+
     def test_warehouses_seeded(self):
         self.assertEqual(self.service.list_warehouses(), [{"id": 1, "name": "Markaziy ombor"}])
 

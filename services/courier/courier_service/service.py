@@ -86,6 +86,18 @@ class CourierService:
             )
         return [{"code": c, "assigned_at": a, "delivered_at": d} for c, a, d in rows]
 
+    def stats(self):
+        """Har bir kuryer: jami biriktirilgan, topshirilgan va hozir qo‘lidagi buyurtmalar."""
+        with self.db.session() as session:
+            rows = session.all(
+                "SELECT courier, COUNT(*), COUNT(delivered_at) FROM assignments "
+                "GROUP BY courier ORDER BY COUNT(*) DESC, courier LIMIT 50"
+            )
+        return [
+            {"courier": courier, "assigned": total, "delivered": delivered, "active": total - delivered}
+            for courier, total, delivered in rows
+        ]
+
     # --- hodisalar ------------------------------------------------------------
     def on_event(self, event):
         handle_once(self.db, event, self._apply)

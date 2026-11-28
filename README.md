@@ -61,6 +61,7 @@ so‘rovda `Authorization: Bearer <token>`.
 | `POST` | `/api/v1/orders/{code}/assign` `{"courier": "<login>"}` | courier | admin, operator |
 | `POST` | `/api/v1/orders/{code}/deliver` | order | admin, operator, **biriktirilgan** kuryer |
 | `GET` | `/api/v1/couriers/me/assignments` | courier | kuryer |
+| `GET` | `/api/v1/stats` · `/api/v1/couriers/stats` | order · courier | admin, operator (dashboard) |
 | `GET` | `/api/v1/tracking/{code}` | tracking | hamma (manzil va kuryer nomisiz) |
 
 Holatlar: `Yangi → Omborda → Yo‘lda → Yetkazildi`. Bosqichni o‘tkazib yuborish yoki ortga

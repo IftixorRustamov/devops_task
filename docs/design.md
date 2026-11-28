@@ -150,7 +150,91 @@ o‘qituvchi xohlasa ochadi, aks holda ekranni to‘ldirmaydi. Tokenlar jurnalda
 Izohda aytilganidek: 401, 403, 409 — bu xato emas, tizim qoidalari ishlayotganining isboti.
 Shuning uchun ular yashirilmaydi.
 
-## 9. Xavfsizlik va texnik tanlovlar
+## 9. Bo‘limlar (tablar)
+
+Yuqori panel ostida rolga qarab tablar:
+
+| Rol | Tablar |
+| --- | --- |
+| Tizimga kirmagan | Kirish, Arxitektura |
+| Operator | Buyurtmalar, Dashboard, Arxitektura |
+| Admin | Buyurtmalar, Dashboard, Foydalanuvchilar, Arxitektura |
+| Kuryer | Yetkazmalarim, Arxitektura |
+
+Dashboard va Arxitektura keng ekran talab qiladi — ularda o‘ng panel (kuzatuv, jurnal) yashiriladi
+va ish maydoni butun kenglikni oladi. Telefonda tablar gorizontal suriladi, faol tab ko‘rinishga keltiriladi.
+
+## 10. Dashboard
+
+Ma’lumot manbalari: `GET /api/v1/stats` (order-service) va `GET /api/v1/couriers/stats`
+(courier-service) — har biri **o‘z bazasidan** hisoblaydi, servislar bir-birining bazasiga
+murojaat qilmaydi. Sahifa ochiq turganda 10 soniyada yangilanadi (fon yorlig‘ida — yo‘q).
+Avtomatik yangilanish so‘rovlari jurnalga yozilmaydi, aks holda jurnal to‘lib ketadi.
+
+| Element | Shakl | Nega aynan shu |
+| --- | --- | --- |
+| Jami, yo‘lda, yetkazilgan %, o‘rtacha vaqt | **Raqam plitalari** (grafik emas) | Bitta raqam — bitta javob; grafik chizish ortiqcha |
+| Holatlar bo‘yicha | Gorizontal bar | Kategoriyalarni solishtirish; holat nomi chapda matn bilan, rang — holat rangi |
+| Oxirgi 24 soat | Ustunli grafik, bitta rang | Vaqt bo‘yicha miqdor; bo‘sh soatlar ham 0 bilan ko‘rsatiladi — oqim uzilishi ko‘rinadi |
+| Bosqichlar davomiyligi | Gorizontal bar | Qaysi bosqich sekin — darhol ko‘rinadi; rang — bosqich yakunidagi holat |
+| Kuryerlar yuklamasi | Ikki qismli bar + legend | «Topshirilgan» va «qo‘lida» — bitta kuryerning ikki qismi, birgalikda jami |
+| Oxirgi buyurtmalar | Jadval | Aniq kodlar va vaqtlar kerak; «Ochish» buyurtmani marshrutda ochadi |
+
+Grafik qoidalari:
+
+- **Tashqi kutubxonasiz SVG** — CSP faqat o‘z manbalariga ruxsat beradi, sahifa internetsiz ishlaydi.
+- Barlar ingichka (22 px), uchi 4 px yumaloq, asosi to‘g‘ri; ikki qism orasida 2 px oq tirqish
+  (chegara chizig‘i o‘rniga).
+- Yorliqlar tanlab: qiymat bar uchida, o‘qda faqat «toza» raqamlar (0, yarmi, maksimum).
+- Matn hech qachon ma’lumot rangida emas — har doim matn ranglarida; rang faqat belgi (bar)da.
+- **Ikki o‘qli grafik yo‘q** — har bir o‘lchov o‘z grafigida.
+- **Har bir grafikda hover/fokus tooltip** (sichqoncha yoki Tab tugmasi bilan) va
+  **«Jadval ko‘rinishi»** — rangni ko‘rmaydigan yoki ekran o‘qish dasturi ishlatadiganlar uchun
+  xuddi shu raqamlar jadvalda. SVG’da `aria-label` bilan qisqa matnli tavsif ham bor.
+- Bo‘sh holat: «Hali buyurtma yo‘q. «Buyurtmalar» bo‘limida birinchisini yarating.»
+
+### Rang palitrasini tekshirish
+
+Holat ranglari grafikda kategoriya ranglari sifatida ishlatiladi, shuning uchun ular rang ko‘rish
+nuqsonlari simulyatsiyasi bilan tekshirildi (OKLab ΔE):
+
+| Tekshiruv | Natija |
+| --- | --- |
+| Yorug‘lik diapazoni | o‘tdi |
+| Rang ko‘rish nuqsonida farqlanish (eng yomon qo‘shni juftlik) | o‘tdi, ΔE 13,3 (≥ 8 talab) |
+| Oddiy ko‘zda farqlanish | o‘tdi, ΔE 15,1 (≥ 15 talab) |
+| Fonga nisbatan kontrast | o‘tdi, hammasi ≥ 3:1 |
+| Rang to‘yinganligi | «Yangi» kulrang-ko‘k (`#5B6676`) **ataylab** past |
+
+«Yangi» uchun binafsha va boshqa to‘yingan ranglar sinab ko‘rildi — ular «Yo‘lda» ko‘kidan
+ajralmadi (ΔE 2–4). «Yangi» — hali hech narsa bo‘lmagan holat, neytral rang uning ma’nosiga
+mos. Bu murosa xavfsiz, chunki holat grafigida **har bir bar holat nomi bilan yozilgan** —
+rang yagona belgi emas.
+
+## 11. Arxitektura (jonli diagramma)
+
+Tizim tuzilishi chizma sifatida, har bir tugun jonli holat bilan. Sahifa har 5 soniyada
+`/health`, `/health/auth|order|courier|tracking` endpointlarini chaqiradi (ular ommaviy, token
+kerak emas — shuning uchun bu tab tizimga kirmasdan ham ochiladi).
+
+- **Tugunlar** — gateway, 4 servis, 4 baza, RabbitMQ. Ramka rangi va burchakdagi belgi:
+  ✓ yashil — ishlaydi, ! amber (uzuq ramka) — qisman (masalan broker yo‘q, hodisalar outbox’da
+  kutmoqda), ✕ qizil — ishlamaydi. Rang + belgi + ramka shakli — faqat rangga tayanmaydi.
+- Baza holati servisning `checks.database` qiymatidan, RabbitMQ holati servislarning
+  `checks.broker` qiymatlaridan olinadi — bazalar va broker tashqaridan to‘g‘ridan-to‘g‘ri
+  tekshirilmaydi (ular yopiq tarmoqda).
+- **Chiziqlar uch xil:** to‘q uzluksiz — sinxron HTTP; amber uzuq — RabbitMQ hodisasi
+  (o‘q yo‘nalishi: chiqaradi / oladi); och kulrang — servisning o‘z bazasi. Pastda legend.
+- Uzuq ramka bilan «Ichki tarmoq» zonasi — tashqaridan faqat gateway orqali kirish mumkinligini
+  ko‘rsatadi.
+- Diagramma ostida **jadval**: har bir servisning holati, baza/broker/outbox tekshiruvlari va
+  javob vaqti (ms). Undan keyin to‘rtta asosiy arxitektura qarori qisqa matnda.
+
+**Namoyishda:** terminalda `docker compose stop rabbitmq` — 5 soniyada RabbitMQ tuguni qizil,
+servislar «qisman» bo‘ladi; buyurtma yaratish baribir ishlaydi. `docker compose start rabbitmq` —
+hammasi yana yashil, kutib turgan hodisalar yetib boradi.
+
+## 12. Xavfsizlik va texnik tanlovlar
 
 - **Token faqat sahifa xotirasida** (JavaScript o‘zgaruvchisi), `localStorage`da emas — sahifa
   yopilsa yo‘qoladi, boshqa skript o‘qiy olmaydi. Access token tugasa (15 daqiqa), sahifa refresh
@@ -162,15 +246,19 @@ Shuning uchun ular yashirilmaydi.
   bosishda yaratadi; allaqachon bo‘lsa (`409`) — xato hisoblanmaydi. Bu faqat namoyish qulayligi:
   oddiy `POST /api/v1/auth/users` endpointini chaqiradi, yangi backend imkoniyati emas.
 
-## 10. Tekshiruv
+## 13. Tekshiruv
 
 - Chrome’da (Playwright) to‘liq ssenariy: noto‘g‘ri login, admin namoyish hisoblari, buyurtma,
   kuryersiz yo‘lga chiqarish (409), biriktirish, boshqa kuryer (bo‘sh ro‘yxat), o‘z kuryeri topshiradi,
   ommaviy kuzatuv, telefon o‘lchami (390 px). JavaScript xatosi yo‘q.
+- Dashboard (5 ta buyurtma turli holatlarda, ikki kuryer) va Arxitektura tablari Chrome’da
+  ochildi; tooltip, jadval ko‘rinishi va telefon maketi tekshirildi.
+- Statistika endpointlari uchun unit va integratsion testlar (hisob-kitob, rol cheklovi).
 - Kontrast nisbatlari WCAG formulasi bilan hisoblandi (3-bo‘lim).
 
 ## Keyingi qadamlar (agar kerak bo‘lsa)
 
+- Dashboard uchun vaqt oralig‘i filtri (bugun / 7 kun / 30 kun).
+
 - Qorong‘i rejim: tokenlar allaqachon o‘zgaruvchilarda, faqat ikkinchi palitra kerak.
-- Buyurtmalar ro‘yxati serverdan (hozir faqat shu sessiyada yaratilganlar) — backend’ga
-  `GET /api/v1/orders` qo‘shishni talab qiladi.
+- To‘liq buyurtmalar ro‘yxati sahifalash bilan (hozir Dashboard oxirgi 10 tasini ko‘rsatadi).

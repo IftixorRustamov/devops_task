@@ -178,6 +178,28 @@ curl -X POST localhost:8000/api/v1/orders/CRY-…/assign \
 `Yo‘lda → Yetkazildi`. Operator/admin yoki **shu buyurtmaga biriktirilgan** kuryer. Boshqa kuryer — `403`.
 `order.status_changed` hodisasi orqali courier-service `delivered_at`ni yozadi.
 
+## `GET /api/v1/stats` — order-service
+
+Admin va operator. Dashboard ko‘rsatkichlari, faqat order-db’dan hisoblanadi.
+
+```json
+{
+  "total": 5,
+  "by_status": {"Yangi": 1, "Omborda": 1, "Yo‘lda": 1, "Yetkazildi": 2},
+  "created_per_hour": [{"hour": "2026-11-28T19:00+00:00", "count": 5}],
+  "stage_avg_seconds": {"receive": 600.0, "dispatch": 1200.0, "deliver": 1800.0},
+  "delivery_avg_seconds": 3600.0,
+  "recent": [{"code": "CRY-…", "status": "Yangi", "created_at": "…", "updated_at": "…"}]
+}
+```
+
+`created_per_hour` — oxirgi 24 soat, bo‘sh soatlar `0` bilan. `stage_avg_seconds` — oldingi
+holatdan shu amalgacha o‘tgan o‘rtacha vaqt; ma’lumot bo‘lmasa `null`.
+
+## `GET /api/v1/couriers/stats` — courier-service
+
+Admin va operator. `{"items": [{"courier": "ali", "assigned": 2, "delivered": 1, "active": 1}]}`
+
 ## `GET /api/v1/couriers/me/assignments` — courier-service
 
 Faqat `courier` roli. `{"items": [{"code": "CRY-…", "assigned_at": "…", "delivered_at": null}]}`

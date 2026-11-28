@@ -1,5 +1,7 @@
 """Buyurtma hayot sikli. Holat o‘zgarishi va hodisa bitta tranzaksiyada yoziladi (outbox)."""
 
+from collections import Counter
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 from crystal_common.errors import (
@@ -9,9 +11,17 @@ from crystal_common.errors import (
 from crystal_common.security import COURIER
 from crystal_common.events import new_event, record_event, utc_now
 
-from .domain import CODE_PREFIX, NEW, ORDER_CREATED, ORDER_STATUS_CHANGED, TRANSITIONS
+from .domain import CODE_PREFIX, NEW, ORDER_CREATED, ORDER_STATUS_CHANGED, STATUSES, TRANSITIONS
 
 SOURCE = "order-service"
+
+
+def parse_time(value):
+    try:
+        moment = datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
 
 
 class CourierClient:
@@ -80,6 +90,59 @@ class OrderService:
             raise NotFoundError("Buyurtma topilmadi.")
         history = [{"status": status, "created_at": created} for status, created in rows]
         return {"code": code, "status": history[-1]["status"], "history": history}
+
+    def stats(self, now=None, hours=24, recent=10, limit=5000):
+        """Dashboard uchun ko‘rsatkichlar. Hisob Python’da — SQLite va PostgreSQL’da bir xil ishlaydi.
+        Faqat oxirgi `limit` ta buyurtma olinadi (o‘quv loyihasi hajmi uchun yetarli)."""
+        now = now or datetime.now(timezone.utc)
+        with self.db.session() as session:
+            orders = session.all(
+                "SELECT code, status, created_at, updated_at FROM orders ORDER BY created_at DESC LIMIT ?",
+                (limit,),
+            )
+            codes = {row[0] for row in orders}
+            events = session.all("SELECT order_code, seq, status, created_at FROM order_events ORDER BY order_code, seq")
+        by_status = Counter(row[1] for row in orders)
+
+        # Oxirgi `hours` soat: har soatda yaratilgan buyurtmalar (bo‘sh soatlar ham 0 bilan).
+        start = (now - timedelta(hours=hours - 1)).replace(minute=0, second=0, microsecond=0)
+        buckets = Counter()
+        for _code, _status, created, _updated in orders:
+            moment = parse_time(created)
+            if moment and moment >= start:
+                buckets[moment.replace(minute=0, second=0, microsecond=0)] += 1
+        per_hour = [
+            {"hour": (start + timedelta(hours=i)).isoformat(timespec="minutes"),
+             "count": buckets[start + timedelta(hours=i)]}
+            for i in range(hours)
+        ]
+
+        # Har bosqich o‘rtacha qancha davom etadi (ketma-ket hodisalar orasidagi vaqt).
+        stage_seconds = {action: [] for action in TRANSITIONS}
+        full_seconds = []
+        by_order = {}
+        for code, _seq, status, created in events:
+            if code in codes:
+                by_order.setdefault(code, []).append((status, parse_time(created)))
+        status_to_action = {target: action for action, (_source, target) in TRANSITIONS.items()}
+        for history in by_order.values():
+            for (prev_status, prev_at), (status, at) in zip(history, history[1:]):
+                if prev_at and at and status in status_to_action:
+                    stage_seconds[status_to_action[status]].append((at - prev_at).total_seconds())
+            if history[-1][0] == STATUSES[-1] and history[0][1] and history[-1][1]:
+                full_seconds.append((history[-1][1] - history[0][1]).total_seconds())
+        average = lambda values: round(sum(values) / len(values), 1) if values else None
+        return {
+            "total": len(orders),
+            "by_status": {status: by_status.get(status, 0) for status in STATUSES},
+            "created_per_hour": per_hour,
+            "stage_avg_seconds": {action: average(values) for action, values in stage_seconds.items()},
+            "delivery_avg_seconds": average(full_seconds),
+            "recent": [
+                {"code": c, "status": s, "created_at": ca, "updated_at": ua}
+                for c, s, ca, ua in orders[:recent]
+            ],
+        }
 
     def internal_view(self, code):
         """Boshqa servislar uchun (gateway orqali tashqariga ochilmaydi)."""

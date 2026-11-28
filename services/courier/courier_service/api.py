@@ -18,6 +18,11 @@ def build_app(service, db, bus, relay):
         body = request.json()
         return HTTPStatus.OK, service.assign(code, body.get("courier"))
 
+    @app.route("GET", r"/api/v1/couriers/stats")
+    def courier_stats(request):
+        require_role(request, ADMIN, OPERATOR)
+        return HTTPStatus.OK, {"items": service.stats()}
+
     @app.route("GET", r"/api/v1/couriers/me/assignments")
     def my_assignments(request):
         user = require_role(request, COURIER)
