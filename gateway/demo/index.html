@@ -193,29 +193,6 @@ button { font: inherit; color: inherit; }
 .legend i { width: 10px; height: 10px; border-radius: 3px; }
 .tooltip { position: fixed; z-index: 30; pointer-events: none; background: var(--ink); color: #fff; font-size: 13px; padding: 7px 11px; border-radius: 10px; box-shadow: var(--shadow-pop); white-space: nowrap; }
 
-/* ============ Arxitektura ============ */
-.arch svg { display: block; width: 100%; height: auto; }
-.arch .node rect { fill: #fff; filter: drop-shadow(0 6px 10px rgba(23,32,54,.10)); }
-.arch .node.db rect { fill: var(--sunken); filter: none; }
-.arch .node .name { font: 650 14px var(--font); fill: var(--ink); }
-.arch .node .role { font: 12px var(--font); fill: var(--ink-2); }
-.arch .node .badge text { font: 700 11px var(--font); fill: #fff; }
-.arch .node[data-health="ok"] .badge circle { fill: var(--done); }
-.arch .node[data-health="degraded"] .badge circle { fill: #B7791F; }
-.arch .node[data-health="fail"] .badge circle { fill: var(--danger); }
-.arch .node[data-health="unknown"] .badge circle { fill: var(--ink-3); }
-.arch .node[data-health="fail"] rect { stroke: var(--danger); stroke-width: 2; }
-.arch .node[data-health="degraded"] rect { stroke: #B7791F; stroke-width: 2; stroke-dasharray: 5 3; }
-.arch .node:focus { outline: none; }
-.arch .node:focus-visible rect { stroke: var(--brand); stroke-width: 3; }
-.arch .edge { fill: none; stroke-width: 1.6; }
-.arch .edge.sync { stroke: #8792A6; }
-.arch .edge.event { stroke: #C08A2A; stroke-dasharray: 6 4; }
-.arch .edge.data { stroke: #C9D0DC; }
-.arch .zone { fill: rgba(238,242,247,.55); stroke: #D8DEE8; stroke-dasharray: 4 5; }
-.arch-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); margin-top: 14px; }
-.arch-legend span { display: inline-flex; align-items: center; gap: 8px; }
-
 /* ============ Jurnal, kuzatuv, toast ============ */
 .log-row { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; padding: 10px 4px; border-top: 1px solid #EEF1F5; }
 .log-row:first-child { border-top: 0; }
@@ -248,7 +225,6 @@ button { font: inherit; color: inherit; }
   <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15v2M12 10v7M17 6v11"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 9M22 21a7 7 0 0 0-4-6.3"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
-  <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="6" rx="1.5"/><rect x="2" y="16" width="6" height="6" rx="1.5"/><rect x="16" y="16" width="6" height="6" rx="1.5"/><path d="M12 8v4M5 16v-2h14v2"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
   <symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
   <symbol id="i-login" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></symbol>
@@ -355,18 +331,6 @@ button { font: inherit; color: inherit; }
       </div>
     </section>
 
-    <section id="view-arch" class="arch" hidden>
-      <div class="grid">
-        <div class="card"><div id="arch-diagram"></div>
-          <div class="arch-legend">
-            <span><svg width="28" height="6" aria-hidden="true"><line x1="0" y1="3" x2="28" y2="3" stroke="#8792A6" stroke-width="1.6"/></svg>HTTP</span>
-            <span><svg width="28" height="6" aria-hidden="true"><line x1="0" y1="3" x2="28" y2="3" stroke="#C08A2A" stroke-width="1.6" stroke-dasharray="6 4"/></svg>Hodisa</span>
-            <span><svg width="28" height="6" aria-hidden="true"><line x1="0" y1="3" x2="28" y2="3" stroke="#C9D0DC" stroke-width="1.6"/></svg>Baza</span>
-          </div>
-        </div>
-        <div class="card"><div class="card-title">Servislar</div><div class="list" id="arch-list"></div></div>
-      </div>
-    </section>
 
     <section id="view-log" hidden>
       <div class="card"><div class="list" id="log"></div></div>
@@ -396,14 +360,13 @@ const PAGES = {
   dashboard: { title: "Dashboard",         icon: "i-chart",   view: "view-dashboard", label: "Dashboard" },
   users:     { title: "Foydalanuvchilar",  icon: "i-users",   view: "view-users",     label: "Foydalanuvchilar" },
   track:     { title: "Kuzatish",          icon: "i-search",  view: "view-track",     label: "Kuzatish" },
-  arch:      { title: "Arxitektura",       icon: "i-network", view: "view-arch",      label: "Arxitektura" },
   log:       { title: "So‘rovlar jurnali", icon: "i-list",    view: "view-log",       label: "Jurnal" },
 };
 const ROLE_PAGES = {
-  none: ["login", "track", "arch", "log"],
-  operator: ["orders", "dashboard", "track", "arch", "log"],
-  admin: ["orders", "dashboard", "users", "track", "arch", "log"],
-  courier: ["courier", "track", "arch", "log"],
+  none: ["login", "track", "log"],
+  operator: ["orders", "dashboard", "track", "log"],
+  admin: ["orders", "dashboard", "users", "track", "log"],
+  courier: ["courier", "track", "log"],
 };
 const state = { token: null, refresh: null, user: null, order: null, assigned: {}, page: "login", logs: [] };
 const timers = {};
@@ -487,7 +450,6 @@ function render() {
   const loaders = {
     orders: loadOrders, courier: loadCourier, users: loadUsers, log: renderLog,
     dashboard: () => { loadDashboard(); timers.d = setInterval(() => document.hidden || loadDashboard(true), 10000); },
-    arch: () => { loadArch(); timers.a = setInterval(() => document.hidden || loadArch(), 5000); },
     track: () => $("track-code").focus(), login: () => $("login-user").focus(),
   };
   loaders[state.page]?.();
@@ -753,67 +715,6 @@ async function loadDashboard(quiet = false) {
   courierChart($("chart-couriers"), c.status === 200 ? c.data.items : []);
 }
 
-/* ================= arxitektura (jonli) ================= */
-const NODES = {
-  client:   { x: 405, y: 12,  w: 150, h: 48, name: "Mijoz", role: "brauzer" },
-  gateway:  { x: 380, y: 98,  w: 200, h: 54, name: "gateway", role: "nginx, JWT" },
-  order:    { x: 60,  y: 206, w: 180, h: 56, name: "order-service", role: "buyurtmalar" },
-  courier:  { x: 280, y: 206, w: 180, h: 56, name: "courier-service", role: "kuryerlar" },
-  auth:     { x: 500, y: 206, w: 180, h: 56, name: "auth-service", role: "login, rollar" },
-  tracking: { x: 720, y: 206, w: 180, h: 56, name: "tracking-service", role: "kuzatuv" },
-  "order-db":    { x: 85,  y: 316, w: 130, h: 46, name: "order-db", role: "PostgreSQL", db: true },
-  "courier-db":  { x: 305, y: 316, w: 130, h: 46, name: "courier-db", role: "PostgreSQL", db: true },
-  "auth-db":     { x: 525, y: 316, w: 130, h: 46, name: "auth-db", role: "PostgreSQL", db: true },
-  "tracking-db": { x: 745, y: 316, w: 130, h: 46, name: "tracking-db", role: "PostgreSQL", db: true },
-  rabbitmq: { x: 60,  y: 414, w: 840, h: 46, name: "RabbitMQ", role: "hodisalar" },
-};
-const BADGE = { ok: "✓", degraded: "!", fail: "✕", unknown: "…" };
-const HEALTH_TEXT = { ok: "Ishlayapti", degraded: "Qisman", fail: "Ishlamayapti", unknown: "Tekshirilmoqda" };
-const HEALTH_TONE = { ok: "done", degraded: "ware", fail: "bad", unknown: "new" };
-const cx = (n) => NODES[n].x + NODES[n].w / 2;
-
-function archSvg(h) {
-  const node = (id) => { const n = NODES[id], s = h[id] || "unknown";
-    return `<g class="node${n.db ? " db" : ""}" data-health="${s}" ${id === "client" ? "" : `tabindex="0" data-tip="${esc(n.name)}: ${HEALTH_TEXT[s]}"`}>
-      <rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="14"/>
-      <text class="name" x="${n.x + 14}" y="${n.y + 22}">${esc(n.name)}</text><text class="role" x="${n.x + 14}" y="${n.y + 39}">${esc(n.role)}</text>
-      ${id === "client" ? "" : `<g class="badge"><circle cx="${n.x + n.w - 18}" cy="${n.y + n.h / 2}" r="9"/><text x="${n.x + n.w - 18}" y="${n.y + n.h / 2 + 4}" text-anchor="middle">${BADGE[s]}</text></g>`}</g>`; };
-  const svc = ["order", "courier", "auth", "tracking"];
-  const ev = (s, a, b) => `<line class="edge event" x1="${cx(s) + 76}" y1="262" x2="${cx(s) + 76}" y2="414" ${a ? 'marker-start="url(#ae)"' : ""} ${b ? 'marker-end="url(#ae)"' : ""}/>`;
-  return `<svg viewBox="0 0 960 486" role="img" aria-label="Gateway to‘rtta servisga yo‘naltiradi; har servisning o‘z bazasi bor; servislar RabbitMQ orqali hodisa almashadi">
-    <defs><marker id="as" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#8792A6"/></marker>
-    <marker id="ae" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#C08A2A"/></marker></defs>
-    <rect class="zone" x="36" y="186" width="888" height="292" rx="22"/>
-    <path class="edge sync" d="M480,60 V98" marker-end="url(#as)"/>
-    ${svc.map((s) => `<path class="edge sync" d="M480,152 V178 H${cx(s)} V206" marker-end="url(#as)"/>`).join("")}
-    ${svc.map((s) => `<line class="edge data" x1="${cx(s)}" y1="262" x2="${cx(s)}" y2="316"/>`).join("")}
-    <line class="edge sync" x1="240" y1="234" x2="280" y2="234" marker-start="url(#as)" marker-end="url(#as)"/>
-    <line class="edge sync" x1="460" y1="234" x2="500" y2="234" marker-end="url(#as)"/>
-    ${ev("order", false, true)}${ev("courier", true, true)}${ev("tracking", true, false)}
-    ${Object.keys(NODES).map(node).join("")}</svg>`;
-}
-
-async function probe(path) {
-  const t = performance.now();
-  try { const r = await fetch(path, { cache: "no-store" }); return { status: r.status, data: await r.json().catch(() => ({})), ms: Math.round(performance.now() - t) }; }
-  catch (_) { return { status: 0, data: {}, ms: null }; }
-}
-
-async function loadArch() {
-  const svc = ["auth", "order", "courier", "tracking"];
-  const [gw, ...res] = await Promise.all([probe("/health"), ...svc.map((s) => probe(`/health/${s}`))]);
-  const h = { gateway: gw.status === 200 ? "ok" : "fail" }, brokers = [];
-  svc.forEach((s, i) => { const r = res[i], c = r.data.checks || {};
-    h[s] = r.status === 200 ? (r.data.status === "ok" ? "ok" : "degraded") : "fail";
-    h[`${s}-db`] = c.database ? (c.database === "ok" ? "ok" : "fail") : (r.status === 503 ? "fail" : "unknown");
-    if (c.broker) brokers.push(c.broker); });
-  h.rabbitmq = !brokers.length ? "unknown" : brokers.includes("ok") ? (brokers.every((b) => b === "ok") ? "ok" : "degraded") : "fail";
-  $("arch-diagram").innerHTML = archSvg(h);
-  const rows = [["gateway", h.gateway, gw.ms], ...svc.map((s, i) => [`${s}-service`, h[s], res[i].ms]), ["RabbitMQ", h.rabbitmq, null]];
-  $("arch-list").innerHTML = rows.map(([name, s, ms]) => `<div class="row"><span class="row-main"><span class="row-title">${esc(name)}</span>${ms != null ? `<br><span class="row-sub num">${ms} ms</span>` : ""}</span>
-    <span class="chip" data-tone="${HEALTH_TONE[s]}">${HEALTH_TEXT[s]}</span></div>`).join("");
-  $("page-actions").innerHTML = `<span class="meta num">${new Date().toLocaleTimeString("uz-UZ")}</span>`;
-}
 
 render();
 </script>

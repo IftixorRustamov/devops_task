@@ -60,7 +60,6 @@ ko‘rinishi. Kulrang fon ustida oq kartalar, chegara chiziqlari o‘rniga yumsh
 | Kirish | Markazda bitta karta; namoyish hisoblari — kichik tugmalar |
 | Buyurtmalar | Chapda: yangi buyurtma + tanlangan buyurtma (marshrut va keyingi qadam). O‘ngda: so‘nggi buyurtmalar |
 | Dashboard | 4 ta ko‘rsatkich kartasi + 4 ta grafik (holatlar, 24 soat, bosqich vaqti, kuryerlar) |
-| Arxitektura | Jonli diagramma (har 5 s `/health/*`) va servislar ro‘yxati |
 | Kuzatish | Kod → holat va vaqt chizig‘i. Token kerak emas |
 | Jurnal | Gateway orqali o‘tgan har bir so‘rov: status kodi, nomi, JSON (yashirin) |
 
@@ -72,11 +71,7 @@ ko‘rinishi. Kulrang fon ustida oq kartalar, chegara chiziqlari o‘rniga yumsh
 - Palitra rang ko‘rish nuqsoni simulyatsiyasi bilan tekshirildi: qo‘shni juftliklar ΔE ≥ 13.
   «Yangi» ataylab neytral kulrang — har bar nomi bilan yozilgan, rang yagona belgi emas.
 
-## Arxitektura diagrammasi
-
-Gateway, 4 servis, 4 baza, RabbitMQ. Holat: ✓ yashil / ! sariq uzuq ramka / ✕ qizil ramka —
-rang + belgi + ramka shakli. Chiziqlar: kulrang — HTTP, sariq uzuq — hodisa, och — baza.
-Namoyishda `docker compose stop rabbitmq` → 5 soniyada RabbitMQ qizil, buyurtma yaratish baribir ishlaydi.
+Tizim arxitekturasi interfeysda emas, hujjatda: [architecture.md](architecture.md).
 
 ## Texnik
 
@@ -87,5 +82,5 @@ Namoyishda `docker compose stop rabbitmq` → 5 soniyada RabbitMQ qizil, buyurtm
 
 ## Tekshiruv
 
-Chrome (Playwright): har bir rol bo‘yicha to‘liq ssenariy, dashboard, arxitektura, kuzatish,
+Chrome (Playwright): har bir rol bo‘yicha to‘liq ssenariy, dashboard, kuzatish,
 jurnal, telefon (390 px). JavaScript xatosi yo‘q, sahifa kengligi ekrandan oshmaydi.

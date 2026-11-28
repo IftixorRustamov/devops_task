@@ -6,6 +6,19 @@ gaplashadi: **HTTP** (javob darhol kerak bo‘lsa) va **RabbitMQ hodisalari** (q
 
 ## Umumiy ko‘rinish
 
+![Crystal Logistics arxitekturasi](images/architecture.svg)
+
+- **gateway** — yagona kirish nuqtasi: har so‘rovda tokenni auth-service’da tekshiradi va
+  so‘rovni kerakli servisga yo‘naltiradi.
+- **4 servis, 4 baza** — har bir servis faqat o‘z PostgreSQL bazasiga ulanadi; bazalar yopiq
+  tarmoqlarda, boshqa servis ularni ko‘ra olmaydi.
+- **Kulrang chiziq** — sinxron HTTP (courier ↔ order, courier → auth).
+  **Sariq uzuq chiziq** — RabbitMQ hodisalari: order-service chiqaradi, courier-service chiqaradi
+  va oladi, tracking-service oladi.
+- Servislar holatini `GET /health/{auth,order,courier,tracking}` ko‘rsatadi (baza, broker, outbox).
+
+Batafsil oqim (Mermaid, GitHub’da chiziladi):
+
 ```mermaid
 flowchart LR
     client[Mijoz / brauzer] -->|HTTP :8000| gw[gateway<br/>nginx + auth_request]

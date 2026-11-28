@@ -35,7 +35,7 @@ so‘rovning status kodini ko‘rsatadi (tafsilot uchun qatorni oching). Dizayn 
 | 7 | Chiqish → **ali** → **Topshirildi** | Kuryer faqat o‘z buyurtmasini topshiradi |
 | 8 | **Kuzatish** → kod | Tokensiz; manzil va kuryer ismi yo‘q |
 | 9 | op1 → **Dashboard** | Ko‘rsatkichlar va 4 grafik |
-| 10 | **Arxitektura**; terminalda `docker compose stop rabbitmq` | RabbitMQ qizil, buyurtma yaratish baribir ishlaydi. `start` — yana yashil |
+| 10 | Arxitektura rasmi: [architecture.md](architecture.md); terminalda `docker compose stop rabbitmq` → buyurtma yarating | Broker yo‘q, lekin buyurtma yaratiladi (outbox). `docker compose start rabbitmq` — hodisalar yetib boradi |
 | 11 | **Jurnal** | Barcha so‘rovlar va status kodlari |
 
 Terminalda qo‘shimcha ko‘rsatish mumkin:
